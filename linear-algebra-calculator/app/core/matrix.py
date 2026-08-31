@@ -9,6 +9,10 @@ class Matrix:
          ]
 
      @property
+     def data(self):
+         return self._data
+
+     @property
      def rows(self):
          return len(self._data)
 
