@@ -1,3 +1,2 @@
-Requirements:
-- pyside6
-- pytest
+PySide6
+pytest
