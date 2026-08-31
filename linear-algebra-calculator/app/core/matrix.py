@@ -1,7 +1,4 @@
-#handle construction, dimensions, access, and modification
-
 class Matrix:
-
      def __init__(self, data):
          self._data = [
             [float(value) for value in row]
@@ -28,6 +25,9 @@ class Matrix:
 
      def __setitem__(self, index, value):
          self._data[index] = value
+
+     def copy(self):
+         return Matrix([row[:] for row in self._data])
 
      def __str__(self):
         return "\n".join(

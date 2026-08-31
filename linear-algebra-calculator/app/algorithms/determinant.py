@@ -1,0 +1,43 @@
+from app.algorithms.elimination import swap_rows, add_multiple_of_row
+
+def determinant(matrix):
+    if matrix.rows != matrix.columns:
+        raise ValueError("Determinant requires a square matrix.")
+
+    result = matrix.copy()
+    det = 1.0
+    swap_count = 0
+
+    for pivot_column in range(result.columns):
+        # Find a non-zero pivot
+        pivot = None
+        for row in range(pivot_column, result.rows):
+            if result[row][pivot_column] != 0:
+                pivot = row
+                break
+
+        # No pivot means determinant is zero
+        if pivot is None:
+            return 0.0
+
+        # Swap rows if necessary
+        if pivot != pivot_column:
+            swap_rows(result, pivot, pivot_column)
+            swap_count += 1
+
+        pivot_value = result[pivot_column][pivot_column]
+
+        # Eliminate values below pivot
+        for row in range(pivot_column + 1, result.rows):
+            if result[row][pivot_column] != 0:
+                scalar = (result[row][pivot_column] / pivot_value)
+                add_multiple_of_row(result, pivot_column, row, -scalar)
+
+    # Product of diagonal
+    for i in range(result.rows):
+        det *= result[i][i]
+
+    # Each row swap changes the sign
+    if swap_count % 2 == 1:
+        det *= -1
+    return det

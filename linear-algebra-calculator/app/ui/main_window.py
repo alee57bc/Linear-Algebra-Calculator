@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QLineEdit, QMainWi
 from app.core.matrix import Matrix
 from app.ui.matrix_editor import MatrixEditor
 from app.ui.result_view import ResultView
-from app.core.operations import add, subtract, scalar_multiply, multiply, transpose
+from app.core.basic_operations import add, subtract, scalar_multiply, multiply, transpose
 
 class MainWindow(QMainWindow):
     def __init__(self):

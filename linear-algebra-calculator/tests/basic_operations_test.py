@@ -1,6 +1,6 @@
 import pytest
 from app.core.matrix import Matrix
-from app.core.operations import add, subtract, scalar_multiply, multiply, transpose
+from app.core.basic_operations import add, subtract, scalar_multiply, multiply, transpose
 
 # Addition
 def test_addition():
