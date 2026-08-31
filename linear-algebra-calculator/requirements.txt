@@ -1,0 +1,3 @@
+Requirements:
+- pyside6
+- pytest
