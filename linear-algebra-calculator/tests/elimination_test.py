@@ -184,3 +184,104 @@ def test_rank_rectangular():
     ])
 
     assert rank(matrix) == 2
+
+def test_gaussian_elimination_records_steps():
+    matrix = Matrix([
+        [1, 2],
+        [2, 5]
+    ])
+    result, steps = gaussian_elimination(
+        matrix,
+        record_steps=True
+    )
+
+    assert len(steps) > 0
+    assert steps[0].description
+    assert isinstance(steps[0].matrix, Matrix)
+
+def test_rref_records_steps():
+    matrix = Matrix([
+        [2, 4],
+        [1, 3]
+    ])
+    result, steps = rref(
+        matrix,
+        record_steps=True
+    )
+
+    assert len(steps) > 0
+    assert steps[0].description
+    assert isinstance(steps[0].matrix, Matrix)
+
+def test_rref_without_recording_returns_matrix():
+    matrix = Matrix([
+        [1, 2],
+        [3, 4]
+    ])
+    result = rref(matrix)
+
+    assert isinstance(result, Matrix)
+
+def test_gaussian_without_recording_returns_matrix():
+    matrix = Matrix([
+        [1, 2],
+        [3, 4]
+    ])
+    result = gaussian_elimination(matrix)
+
+    assert isinstance(result, Matrix)
+
+def test_recorded_steps_are_independent_snapshots():
+    matrix = Matrix([
+        [2, 4],
+        [1, 3]
+    ])
+    result, steps = rref(
+        matrix,
+        record_steps=True
+    )
+
+    assert len(steps) >= 2
+    assert steps[0].matrix is not steps[1].matrix
+
+def test_recorded_steps_do_not_modify_original():
+    matrix = Matrix([
+        [2, 4],
+        [1, 3]
+    ])
+    original = [
+        [2.0, 4.0],
+        [1.0, 3.0]
+    ]
+
+    rref(matrix, record_steps=True)
+
+    assert matrix.data == original
+
+def test_rref_records_row_swap():
+    matrix = Matrix([
+        [0, 1],
+        [1, 2]
+    ])
+    result, steps = rref(
+        matrix,
+        record_steps=True
+    )
+
+    assert steps[0].description == "R1 ↔ R2"
+
+def test_recorded_snapshot_keeps_original_state():
+    matrix = Matrix([
+        [2, 4],
+        [1, 3]
+    ])
+    result, steps = rref(
+        matrix,
+        record_steps=True
+    )
+    first_snapshot = [
+        row.copy()
+        for row in steps[0].matrix.data
+    ]
+
+    assert steps[0].matrix.data == first_snapshot
