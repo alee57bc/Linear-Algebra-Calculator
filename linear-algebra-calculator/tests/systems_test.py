@@ -1,8 +1,8 @@
 import pytest
-
 from app.core.matrix import Matrix
 from app.core.vector import Vector
 from app.algorithms.systems import solve_system
+from app.results.system_solution import SolutionType
 
 def test_solve_system():
     A = Matrix([
@@ -13,7 +13,8 @@ def test_solve_system():
     result = solve_system(A, b)
     expected = [1.8, 1.4]
 
-    assert result.data == pytest.approx(expected)
+    assert result.solution_type == SolutionType.UNIQUE
+    assert result.solution.data == pytest.approx(expected)
 
 def test_solve_system_integer_solution():
     A = Matrix([
@@ -24,7 +25,8 @@ def test_solve_system_integer_solution():
     result = solve_system(A, b)
     expected = [2.0, 3.0]
 
-    assert result.data == pytest.approx(expected)
+    assert result.solution_type == SolutionType.UNIQUE
+    assert result.solution.data == pytest.approx(expected)
 
 def test_solve_system_integer_solution():
     A = Matrix([
@@ -35,7 +37,7 @@ def test_solve_system_integer_solution():
     result = solve_system(A, b)
     expected = [2.0, 3.0]
 
-    assert result.data == pytest.approx(expected)
+    assert result.solution.data == pytest.approx(expected)
 
 def test_solve_system_dimension_mismatch():
     A = Matrix([
@@ -57,8 +59,9 @@ def test_no_solution():
         5
     ])
 
-    with pytest.raises(ValueError, match="no solution"):
-        solve_system(A, b)
+    result = solve_system(A, b)
+    assert result.solution_type == SolutionType.NO_SOLUTION
+    assert result.solution is None
 
 def test_infinitely_many_solutions():
     A = Matrix([
@@ -70,6 +73,7 @@ def test_infinitely_many_solutions():
         4
     ])
 
-    with pytest.raises(ValueError, match="infinitely many"):
-        solve_system(A, b)
+    result = solve_system(A, b)
+    assert result.solution_type == SolutionType.INFINITE
+    assert result.solution is None
 
