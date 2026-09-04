@@ -1,16 +1,30 @@
-from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMessageBox, QPushButton, QSpinBox, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QLineEdit, QListWidget, QMainWindow, QMessageBox, QPushButton, QSpinBox, QVBoxLayout, QWidget
 from app.core.matrix import Matrix
 from app.ui.matrix_editor import MatrixEditor
 from app.ui.result_view import ResultView
+from app.ui.step_view import StepView
 from app.core.basic_operations import add, subtract, scalar_multiply, multiply, transpose
+from app.algorithms.elimination import gaussian_elimination, rref
 from app.utils.cleanup import clean_matrix
 from app.exceptions import LinearAlgebraError
+from app.history.history_manager import HistoryManager
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Linear Algebra Calculator")
         self.result_view = ResultView()
+
+    #------ History ------
+        self.history_manager = HistoryManager()
+        self.history_list = QListWidget()
+        self.history_list.itemClicked.connect(self.show_history_entry)
+        self.clear_history_button = QPushButton("Clear History")
+        self.clear_history_button.clicked.connect(self.clear_history)
+
+    #------ Step View ------
+        self.step_view = StepView()
 
     #------ Matrix A ------
         self.rows_a = 2
@@ -97,6 +111,8 @@ class MainWindow(QMainWindow):
               "Scalar Multiplication",
               "Matrix Multiplication",
               "Transpose",
+              "Gaussian Elimination",
+              "RREF",
         ])
         #add operation layout
         operation_layout = QHBoxLayout()
@@ -140,6 +156,11 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(self.calculate_button)
         layout.addWidget(self.result_view)
+        layout.addWidget(self.step_view)
+
+        layout.addWidget(QLabel("History"))
+        layout.addWidget(self.history_list)
+        layout.addWidget(self.clear_history_button)
 
     #------ Central Widget ------
         central_widget = QWidget()
@@ -223,30 +244,63 @@ class MainWindow(QMainWindow):
     def calculate(self):
         operation = self.operation_selector.currentText()
         matrix_a = self.matrix_a_editor.get_matrix()
-
+        if matrix_a is None:
+            return
         try:
             if operation == "Addition":
                 matrix_b = self.matrix_b_editor.get_matrix()
+                if matrix_b is None:
+                    return
                 result = add(matrix_a, matrix_b)
+                inputs = [matrix_a, matrix_b]
+                self.step_view.clear_steps()
             elif operation == "Subtraction":
                 matrix_b = self.matrix_b_editor.get_matrix()
+                if matrix_b is None:
+                    return
                 result = subtract(matrix_a, matrix_b)
+                inputs = [matrix_a, matrix_b]
+                self.step_view.clear_steps()
             elif operation == "Scalar Multiplication":
                 scalar = float(self.scalar_input.text())
                 result = scalar_multiply(matrix_a, scalar)
+                inputs = [matrix_a, scalar]
+                self.step_view.clear_steps()
             elif operation == "Matrix Multiplication":
                 matrix_b = self.matrix_b_editor.get_matrix()
+                if matrix_b is None:
+                    return
                 result = multiply(matrix_a, matrix_b)
+                inputs = [matrix_a, matrix_b]
+                self.step_view.clear_steps()
             elif operation == "Transpose":
                 result = transpose(matrix_a)
+                inputs = [matrix_a]
+                self.step_view.clear_steps()
+            elif operation == "Gaussian Elimination":
+                result, steps = gaussian_elimination(matrix_a, record_steps=True)
+                inputs = [matrix_a]
+                self.step_view.update_steps(steps)
+            elif operation == "RREF":
+                result, steps = rref(matrix_a, record_steps=True)
+                inputs = [matrix_a]
+                self.step_view.update_steps(steps)
             else:
                 return
-            self.result_view.update_matrix(clean_matrix(result))
+
+            self.history_manager.add_entry(operation, inputs, result)
+            self.history_list.addItem(f"{len(self.history_manager)}. {operation}")
+
+            self.result_view.update_matrix(result)
 
         except (ValueError, LinearAlgebraError) as error:
-            QMessageBox.warning(
-                self,
-                "Invalid Operation",
-                str(error)
-            )
+            QMessageBox.warning(self, "Invalid Operation", str(error))
 
+    def show_history_entry(self, item):
+        index = self.history_list.row(item)
+        entry = self.history_manager.get_entry(index)
+        self.result_view.update_matrix(entry.result)
+
+    def clear_history(self):
+        self.history_manager.clear()
+        self.history_list.clear()

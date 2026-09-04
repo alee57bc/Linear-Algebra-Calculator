@@ -25,6 +25,11 @@ class Matrix:
 
          self._data = [[float(value) for value in row] for row in data]
 
+     def __eq__(self, other):
+         if not isinstance(other, Matrix):
+             return False
+         return self._data == other._data
+
      @property
      def data(self):
          return self._data
