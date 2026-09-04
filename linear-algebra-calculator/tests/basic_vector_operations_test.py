@@ -1,6 +1,7 @@
 import pytest, math
 from app.core.vector import Vector
 from app.core.basic_vector_operations import dot_product, cross_product, norm, vector_projection
+from app.exceptions import DimensionMismatchError, ZeroVectorError
 
 def test_dot_product():
     u = Vector([1, 2, 3])
@@ -34,7 +35,7 @@ def test_dot_product_mismatched_dimensions():
     u = Vector([1, 2])
     v = Vector([3, 4, 5])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(DimensionMismatchError):
         dot_product(u, v)
 
 def test_cross_product():
@@ -73,20 +74,15 @@ def test_cross_product_invalid_dimension():
     u = Vector([1, 2])
     v = Vector([3, 4])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(DimensionMismatchError):
         cross_product(u, v)
 
 def test_cross_product_mismatched_dimensions():
     u = Vector([1, 2, 3])
     v = Vector([4, 5])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(DimensionMismatchError):
         cross_product(u, v)
-
-def norm(v: Vector):
-    return math.sqrt(
-        sum(value ** 2 for value in v.data)
-    )
 
 def test_norm_3d():
     v = Vector([1, 2, 2])
@@ -147,12 +143,12 @@ def test_projection_mismatched_dimensions():
     u = Vector([1, 2])
     v = Vector([3, 4, 5])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(DimensionMismatchError):
         vector_projection(u, v)
 
 def test_projection_zero_vector():
     u = Vector([1, 2])
     v = Vector([0, 0])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ZeroVectorError):
         vector_projection(u, v)

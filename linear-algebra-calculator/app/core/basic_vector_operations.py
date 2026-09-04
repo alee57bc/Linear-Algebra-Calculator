@@ -1,16 +1,17 @@
 import math
 from app.core.vector import Vector
 from app.utils.numeric import is_zero
+from app.exceptions import DimensionMismatchError, ZeroVectorError
 
 def dot_product(u, v):
     if u.dimension != v.dimension:
-        raise ValueError("Vectors must have the same dimension.")
+        raise DimensionMismatchError
 
     return sum(a * b for a, b in zip(u.data, v.data))
 
 def cross_product(u, v):
     if u.dimension != 3 or v.dimension != 3:
-        raise ValueError("Cross product requires 3D vectors.")
+        raise DimensionMismatchError
 
     return Vector([
         u[1] * v[2] - u[2] * v[1],
@@ -23,11 +24,11 @@ def norm(v):
 
 def vector_projection(u: Vector, v: Vector):
     if u.dimension != v.dimension:
-        raise ValueError("Vectors must have the same dimension.")
+        raise DimensionMismatchError
     denominator = dot_product(v, v)
 
     if is_zero(denominator):
-        raise ValueError("Cannot project onto the zero vector.")
+        raise ZeroVectorError
 
     scalar = dot_product(u, v) / denominator
 

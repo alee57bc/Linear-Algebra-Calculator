@@ -1,6 +1,7 @@
 from app.core.vector import Vector
 from app.core.basic_vector_operations import vector_projection, norm
 from app.utils.numeric import is_zero
+from app.exceptions import LinearDependenceError
 
 def gram_schmidt(vectors: list[Vector]):
     orthogonal = []
@@ -15,8 +16,6 @@ def gram_schmidt(vectors: list[Vector]):
             ])
 
         if is_zero(norm(u)):
-            raise ValueError(
-                "Vectors must be linearly independent."
-            )
+            raise LinearDependenceError
         orthogonal.append(u)
     return orthogonal

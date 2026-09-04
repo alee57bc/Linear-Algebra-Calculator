@@ -1,9 +1,10 @@
 from app.algorithms.elimination import swap_rows, add_multiple_of_row
 from app.utils.numeric import is_zero, clean_number
+from app.exceptions import NonSquareMatrixError
 
 def determinant(matrix):
     if matrix.rows != matrix.columns:
-        raise ValueError("Determinant requires a square matrix.")
+        raise NonSquareMatrixError
 
     result = matrix.copy()
     det = 1.0

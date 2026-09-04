@@ -1,7 +1,7 @@
 import pytest
 from app.core.matrix import Matrix
 from app.algorithms.determinant import determinant
-
+from app.exceptions import NonSquareMatrixError
 
 def test_determinant_1x1():
     matrix = Matrix([
@@ -49,5 +49,5 @@ def test_determinant_rectangular():
         [4, 5, 6]
     ])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(NonSquareMatrixError):
         determinant(matrix)

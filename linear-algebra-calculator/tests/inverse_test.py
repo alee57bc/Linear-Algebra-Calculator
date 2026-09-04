@@ -1,42 +1,8 @@
 import pytest
+from app.algorithms.inverse import inverse
 from app.algorithms.elimination import rref
 from app.core.matrix import Matrix
-
-def inverse(matrix):
-    if matrix.rows != matrix.columns:
-        raise ValueError("Inverse requires a square matrix.")
-    n = matrix.rows
-
-    # Create augmented matrix [A | I]
-    augmented_data = []
-    for i in range(n):
-        row = matrix[i][:]
-        for j in range(n):
-            if i == j:
-                row.append(1.0)
-            else:
-                row.append(0.0)
-        augmented_data.append(row)
-    augmented = Matrix(augmented_data)
-
-    # Reduce [A | I] to [I | A^-1]
-    reduced = rref(augmented)
-
-    # Verify left side is the identity matrix
-    for i in range(n):
-        for j in range(n):
-            expected = 1.0 if i == j else 0.0
-            if abs(reduced[i][j] - expected) > 1e-10:
-                raise ValueError("Matrix is not invertible.")
-
-    # Extract right half
-    inverse_data = []
-    for i in range(n):
-        inverse_data.append(
-            reduced[i][n:]
-        )
-
-    return Matrix(inverse_data)
+from app.exceptions import NonSquareMatrixError, SingularMatrixError
 
 def test_inverse_3x3():
     matrix = Matrix([
@@ -76,7 +42,7 @@ def test_inverse_singular():
         [2, 4]
     ])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(SingularMatrixError):
         inverse(matrix)
 
 def test_inverse_rectangular():
@@ -85,7 +51,7 @@ def test_inverse_rectangular():
         [4, 5, 6]
     ])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(NonSquareMatrixError):
         inverse(matrix)
 
 def test_inverse_1x1():

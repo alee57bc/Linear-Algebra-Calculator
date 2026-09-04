@@ -1,11 +1,11 @@
 from app.algorithms.elimination import rref
 from app.core.matrix import Matrix
 from app.utils.numeric import is_close
-
+from app.exceptions import NonSquareMatrixError, SingularMatrixError
 
 def inverse(matrix):
     if matrix.rows != matrix.columns:
-        raise ValueError("Inverse requires a square matrix.")
+        raise NonSquareMatrixError
     n = matrix.rows
 
     # Create augmented matrix [A | I]
@@ -29,7 +29,7 @@ def inverse(matrix):
         for j in range(n):
             expected = 1.0 if i == j else 0.0
             if not is_close(reduced[i][j], expected):
-                raise ValueError("Matrix is not invertible.")
+                raise SingularMatrixError
 
     # Extract right half
     inverse_data = []

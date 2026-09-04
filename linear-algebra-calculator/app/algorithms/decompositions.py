@@ -4,6 +4,7 @@ from app.core.basic_operations import transpose, multiply
 from app.algorithms.gram_schmidt import gram_schmidt
 from app.core.basic_vector_operations import norm
 from app.utils.numeric import is_zero
+from app.exceptions import LinearDependenceError
 
 def qr_decomposition(A: Matrix):
     columns = [
@@ -16,9 +17,7 @@ def qr_decomposition(A: Matrix):
     for vector in orthogonal:
         magnitude = norm(vector)
         if is_zero(magnitude):
-            raise ValueError(
-                "Matrix columns must be linearly independent."
-            )
+            raise LinearDependenceError
         orthonormal.append(
             Vector([value / magnitude
                 for value in vector.data])

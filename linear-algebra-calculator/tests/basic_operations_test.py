@@ -1,6 +1,7 @@
 import pytest
 from app.core.matrix import Matrix
 from app.core.basic_operations import add, subtract, scalar_multiply, multiply, transpose
+from app.exceptions import DimensionMismatchError
 
 # Addition
 def test_addition():
@@ -29,7 +30,7 @@ def test_addition_dimension_mismatch():
         [4, 5, 6]
     ])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(DimensionMismatchError):
         add(a, b)
 
 # Subtraction
@@ -59,7 +60,7 @@ def test_subtraction_dimension_mismatch():
         [4, 5, 6]
     ])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(DimensionMismatchError):
         subtract(a, b)
 
 # Scalar Multiplication
@@ -174,7 +175,7 @@ def test_matrix_multiplication_invalid_dimensions():
         [9, 10, 11, 12]
     ])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(DimensionMismatchError):
         multiply(a, b)
 
 # Transpose

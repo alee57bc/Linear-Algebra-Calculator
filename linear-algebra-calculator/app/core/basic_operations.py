@@ -1,8 +1,9 @@
 from app.core.matrix import Matrix
+from app.exceptions import DimensionMismatchError
 
 def add(a, b):
     if a.rows != b.rows or a.columns != b.columns:
-        raise ValueError("Matrices must have the same dimensions.")
+        raise DimensionMismatchError
     data = []
     for row in range(a.rows):
         row_data = []
@@ -14,7 +15,7 @@ def add(a, b):
 
 def subtract(a, b):
     if a.rows != b.rows or a.columns != b.columns:
-        raise ValueError("Matrices must have the same dimensions.")
+        raise DimensionMismatchError
     data = []
     for row in range(a.rows):
         row_data = []
@@ -36,10 +37,8 @@ def scalar_multiply(matrix, scalar):
 
 def multiply(a, b):
     if a.columns != b.rows:
-        raise ValueError(
-            "The number of columns in the first matrix "
-            "must equal the number of rows in the second matrix."
-        )
+        raise DimensionMismatchError
+
     data = []
     for row in range(a.rows):
         row_data = []
