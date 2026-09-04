@@ -1,4 +1,5 @@
 from app.core.matrix import Matrix
+from app.core.vector import Vector
 from app.exceptions import DimensionMismatchError
 
 def add(a, b):
@@ -58,3 +59,17 @@ def transpose(matrix):
             row_data.append(matrix[row][column])
         data.append(row_data)
     return Matrix(data)
+
+def matrix_vector_multiply(matrix, vector):
+    if matrix.columns != vector.dimension:
+        raise DimensionMismatchError
+
+    data = []
+
+    for row in range(matrix.rows):
+        value = 0.0
+        for column in range(matrix.columns):
+            value += matrix[row][column] * vector[column]
+        data.append(value)
+
+    return Vector(data)

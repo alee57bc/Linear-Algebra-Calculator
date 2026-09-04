@@ -1,6 +1,7 @@
 import pytest
 from app.core.matrix import Matrix
-from app.core.basic_operations import add, subtract, scalar_multiply, multiply, transpose
+from app.core.vector import Vector
+from app.core.basic_operations import add, subtract, scalar_multiply, multiply, transpose, matrix_vector_multiply
 from app.exceptions import DimensionMismatchError
 
 # Addition
@@ -229,3 +230,19 @@ def test_transpose_Nx1():
     assert result.data == [
         [1.0, 2.0, 3.0, 4.0]
     ]
+
+def test_matrix_vector_multiply():
+    matrix = Matrix([
+        [1, 2],
+        [3, 4]
+    ])
+    vector = Vector([5, 6])
+    result = matrix_vector_multiply(
+        matrix,
+        vector
+    )
+
+    assert result.data == pytest.approx([
+        17.0,
+        39.0
+    ])

@@ -1,6 +1,10 @@
+import pytest
 from app.core.matrix import Matrix
 from app.core.basic_operations import multiply, transpose
 from app.algorithms.decompositions import qr_decomposition
+from app.utils.numeric import is_zero, is_close
+from app.exceptions import NonSquareMatrixError, SingularMatrixError
+from app.algorithms.decompositions import qr_decomposition, lu_decomposition
 
 def test_qr_reconstructs_matrix():
     A = Matrix([
@@ -13,7 +17,7 @@ def test_qr_reconstructs_matrix():
 
     for i in range(A.rows):
         for j in range(A.columns):
-            assert abs(reconstructed[i][j] - A[i][j]) < 1e-10
+            assert is_close(reconstructed[i][j], A[i][j])
 
 def test_q_columns_are_orthonormal():
     A = Matrix([
@@ -23,10 +27,10 @@ def test_q_columns_are_orthonormal():
     Q, R = qr_decomposition(A)
     result = multiply(transpose(Q), Q)
 
-    assert abs(result[0][0] - 1) < 1e-10
-    assert abs(result[1][1] - 1) < 1e-10
-    assert abs(result[0][1]) < 1e-10
-    assert abs(result[1][0]) < 1e-10
+    assert is_close(result[0][0], 1.0)
+    assert is_close(result[1][1], 1.0)
+    assert is_zero(result[0][1])
+    assert is_zero(result[1][0])
 
 def test_r_is_upper_triangular():
     A = Matrix([
@@ -35,4 +39,52 @@ def test_r_is_upper_triangular():
     ])
     Q, R = qr_decomposition(A)
 
-    assert abs(R[1][0]) < 1e-10
+    assert is_zero(R[1][0])
+
+def test_lu_reconstructs_matrix():
+    A = Matrix([
+        [2, 3],
+        [4, 7]
+    ])
+    L, U = lu_decomposition(A)
+    reconstructed = multiply(L, U)
+
+    for i in range(A.rows):
+        for j in range(A.columns):
+            assert is_close(reconstructed[i][j], A[i][j])
+
+def test_l_is_lower_triangular():
+    A = Matrix([
+        [2, 3],
+        [4, 7]
+    ])
+    L, U = lu_decomposition(A)
+
+    assert L[0][1] == pytest.approx(0.0)
+    assert L[0][0] == pytest.approx(1.0)
+    assert L[1][1] == pytest.approx(1.0)
+
+def test_u_is_upper_triangular():
+    A = Matrix([
+        [2, 3],
+        [4, 7]
+    ])
+    L, U = lu_decomposition(A)
+
+    assert U[1][0] == pytest.approx(0.0)
+
+def test_lu_requires_square_matrix():
+    A = Matrix([
+        [1, 2, 3],
+        [4, 5, 6]
+    ])
+    with pytest.raises(NonSquareMatrixError):
+        lu_decomposition(A)
+
+def test_lu_zero_pivot():
+    A = Matrix([
+        [0, 1],
+        [1, 1]
+    ])
+    with pytest.raises(SingularMatrixError):
+        lu_decomposition(A)
