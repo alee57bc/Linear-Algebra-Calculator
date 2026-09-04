@@ -1,4 +1,5 @@
 from app.algorithms.elimination import swap_rows, add_multiple_of_row
+from app.utils.numeric import is_zero, clean_number
 
 def determinant(matrix):
     if matrix.rows != matrix.columns:
@@ -12,7 +13,7 @@ def determinant(matrix):
         # Find a non-zero pivot
         pivot = None
         for row in range(pivot_column, result.rows):
-            if result[row][pivot_column] != 0:
+            if not is_zero(result[row][pivot_column]):
                 pivot = row
                 break
 
@@ -29,10 +30,9 @@ def determinant(matrix):
 
         # Eliminate values below pivot
         for row in range(pivot_column + 1, result.rows):
-            if result[row][pivot_column] != 0:
-                scalar = (result[row][pivot_column] / pivot_value)
+            if not is_zero(result[row][pivot_column]):
+                scalar = result[row][pivot_column] / pivot_value
                 add_multiple_of_row(result, pivot_column, row, -scalar)
-
     # Product of diagonal
     for i in range(result.rows):
         det *= result[i][i]
@@ -40,4 +40,4 @@ def determinant(matrix):
     # Each row swap changes the sign
     if swap_count % 2 == 1:
         det *= -1
-    return det
+    return clean_number(det)

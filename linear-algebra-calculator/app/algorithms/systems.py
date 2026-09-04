@@ -1,6 +1,7 @@
 from app.core.matrix import Matrix
 from app.core.vector import Vector
 from app.algorithms.elimination import rref
+from app.utils.numeric import is_zero, is_close
 
 def solve_system(A: Matrix, b: Vector):
     if A.rows != b.dimension:
@@ -20,11 +21,12 @@ def solve_system(A: Matrix, b: Vector):
     # Check for inconsistent rows
     for row in range(reduced.rows):
         all_zero = all(
-            abs(reduced[row][column]) <= 1e-10
+            is_zero(reduced[row][column])
             for column in range(A.columns)
         )
         last_value = reduced[row][A.columns]
-        if all_zero and abs(last_value) > 1e-10:
+
+        if all_zero and not is_zero(last_value):
             raise ValueError("System has no solution.")
 
     # Check whether there is a unique solution
@@ -32,11 +34,11 @@ def solve_system(A: Matrix, b: Vector):
 
     for row in range(reduced.rows):
         for column in range(A.columns):
-            if abs(reduced[row][column] - 1.0) <= 1e-10:
+            if is_close(reduced[row][column], 1.0):
                 pivot = True
                 for other_column in range(A.columns):
                     if other_column != column:
-                        if abs(reduced[row][other_column]) > 1e-10:
+                        if not is_zero(reduced[row][other_column]):
                             pivot = False
                             break
                 if pivot:

@@ -1,5 +1,6 @@
 import math
 from app.core.vector import Vector
+from app.utils.numeric import is_zero
 
 def dot_product(u, v):
     if u.dimension != v.dimension:
@@ -25,8 +26,9 @@ def vector_projection(u: Vector, v: Vector):
         raise ValueError("Vectors must have the same dimension.")
     denominator = dot_product(v, v)
 
-    if denominator == 0:
+    if is_zero(denominator):
         raise ValueError("Cannot project onto the zero vector.")
+
     scalar = dot_product(u, v) / denominator
 
     return Vector([scalar * value for value in v.data])

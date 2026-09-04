@@ -1,5 +1,7 @@
 from app.algorithms.elimination import rref
 from app.core.matrix import Matrix
+from app.utils.numeric import is_close
+
 
 def inverse(matrix):
     if matrix.rows != matrix.columns:
@@ -26,13 +28,13 @@ def inverse(matrix):
     for i in range(n):
         for j in range(n):
             expected = 1.0 if i == j else 0.0
-            if abs(reduced[i][j] - expected) > 1e-10:
+            if not is_close(reduced[i][j], expected):
                 raise ValueError("Matrix is not invertible.")
 
     # Extract right half
     inverse_data = []
+
     for i in range(n):
         inverse_data.append(
-            reduced[i][n:]
-        )
+            reduced[i][n:])
     return Matrix(inverse_data)
