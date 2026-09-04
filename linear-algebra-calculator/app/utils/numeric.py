@@ -18,3 +18,12 @@ def clean_number(value: float) -> float:
 
 def clean_row(row):
     return [clean_number(value) for value in row]
+
+def format_number(value: float, decimals: int = 2) -> str:
+    value = clean_number(value)
+    rounded = round(value, decimals)
+
+    if rounded == int(rounded):
+        return str(int(rounded))
+
+    return f"{rounded:.{decimals}f}".rstrip("0").rstrip(".")

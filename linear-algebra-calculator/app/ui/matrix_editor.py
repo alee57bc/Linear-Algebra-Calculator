@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QMessageBox
 from app.core.matrix import Matrix
-from app.utils.numeric import clean_number
+from app.utils.numeric import clean_number, format_number
 
 class MatrixEditor(QTableWidget):
     def __init__(self, matrix, parent=None):
@@ -16,7 +16,7 @@ class MatrixEditor(QTableWidget):
         for row in range(matrix.rows):
             for column in range(matrix.columns):
                 value = clean_number(matrix[row][column])
-                item = QTableWidgetItem(str(value))
+                item = QTableWidgetItem(format_number(matrix[row][column]))
                 self.setItem(row, column, item)
 
     def get_matrix(self):

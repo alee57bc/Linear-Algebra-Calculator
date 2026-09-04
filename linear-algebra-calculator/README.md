@@ -1,7 +1,7 @@
 Linear Algebra Calculator
 
 TODO:
-- Improve Matrix API carefully
+- Improve Matrix API
 - Add mathematical property tests
 
 
