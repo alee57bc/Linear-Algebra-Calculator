@@ -1,9 +1,29 @@
 class Matrix:
      def __init__(self, data):
-         self._data = [
-            [float(value) for value in row]
-            for row in data
-         ]
+         #check inputs
+         if not isinstance(data, list):
+             raise TypeError("Matrix data must be a list of rows.")
+
+         if len(data) == 0:
+             raise ValueError("Matrix cannot be empty.")
+
+         if not all(isinstance(row, list) for row in data):
+             raise TypeError("Each matrix row must be a list.")
+
+         if len(data[0]) == 0:
+             raise ValueError("Matrix rows cannot be empty.")
+
+         column_count = len(data[0])
+
+         for row in data:
+             if len(row) != column_count:
+                 raise ValueError("All matrix rows must have the same length.")
+         try:
+             self._data = [[float(value) for value in row] for row in data]
+         except (TypeError, ValueError):
+             raise ValueError("Matrix values must be numeric.")
+
+         self._data = [[float(value) for value in row] for row in data]
 
      @property
      def data(self):

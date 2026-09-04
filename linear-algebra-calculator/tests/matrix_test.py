@@ -1,3 +1,4 @@
+import pytest
 from app.core.matrix import Matrix
 
 def test_matrix_dimensions():
@@ -25,3 +26,36 @@ def test_matrix_modification():
     ])
     matrix[0][0] = 5
     assert matrix[0][0] == 5
+
+def test_matrix_rejects_empty_data():
+    with pytest.raises(ValueError):
+        Matrix([])
+
+def test_matrix_rejects_empty_rows():
+    with pytest.raises(ValueError):
+        Matrix([[]])
+
+def test_matrix_rejects_unequal_row_lengths():
+    with pytest.raises(ValueError):
+        Matrix([
+            [1, 2],
+            [3]
+        ])
+
+def test_matrix_rejects_non_list_data():
+    with pytest.raises(TypeError):
+        Matrix("not a matrix")
+
+def test_matrix_rejects_non_list_rows():
+    with pytest.raises(TypeError):
+        Matrix([
+            [1, 2],
+            (3, 4)
+        ])
+
+def test_matrix_rejects_non_numeric_values():
+    with pytest.raises(ValueError):
+        Matrix([
+            [1, 2],
+            [3, "hello"]
+        ])

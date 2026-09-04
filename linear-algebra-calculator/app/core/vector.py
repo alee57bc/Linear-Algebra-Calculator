@@ -1,5 +1,20 @@
 class Vector:
     def __init__(self, data):
+        if not isinstance(data, list):
+            raise TypeError("Vector data must be a list.")
+
+        if len(data) == 0:
+            raise ValueError("Vector cannot be empty.")
+
+        try:
+            self._data = [
+                float(value)
+                for value in data
+            ]
+        except (TypeError, ValueError):
+            raise ValueError(
+                "Vector values must be numeric."
+            )
         self._data = [float(value) for value in data]
 
     @property
