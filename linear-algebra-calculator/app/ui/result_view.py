@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
 from app.core.matrix import Matrix
+from app.utils.numeric import clean_number
 
 class ResultView(QWidget):
     def __init__(self, matrix=None):
@@ -27,5 +28,6 @@ class ResultView(QWidget):
         # Add the new matrix values
         for row in range(matrix.rows):
             for column in range(matrix.columns):
-                value = QLabel(str(matrix[row][column]))
+                cleaned = clean_number(matrix[row][column])
+                value = QLabel(str(cleaned))
                 self.matrix_layout.addWidget(value, row, column)

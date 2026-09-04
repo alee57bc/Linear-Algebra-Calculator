@@ -1,5 +1,6 @@
 from app.utils.numeric import is_zero, is_close
 from app.results.elimination_step import EliminationStep
+from app.utils.cleanup import clean_matrix
 
 def swap_rows(matrix, row1, row2):
     matrix[row1], matrix[row2] = matrix[row2], matrix[row1]
@@ -20,7 +21,7 @@ def find_pivot_row(matrix, start_row, pivot_column):
 
 def record_step(steps, description, matrix):
     if steps is not None:
-        steps.append(EliminationStep(description=description, matrix=matrix.copy()))
+        steps.append(EliminationStep(description=description, matrix=clean_matrix(matrix)))
 
 def prepare_pivot(matrix, pivot_row, pivot_column, steps=None):
     pivot = find_pivot_row(matrix, pivot_row, pivot_column)

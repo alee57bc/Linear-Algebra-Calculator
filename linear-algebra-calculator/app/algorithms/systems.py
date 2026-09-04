@@ -3,6 +3,7 @@ from app.core.vector import Vector
 from app.algorithms.elimination import rref
 from app.utils.numeric import is_zero, is_close
 from app.results.system_solution import SystemSolution, SolutionType
+from app.utils.cleanup import clean_vector
 
 def solve_system(A: Matrix, b: Vector):
     if A.rows != b.dimension:
@@ -48,4 +49,4 @@ def solve_system(A: Matrix, b: Vector):
 
     return SystemSolution(
         solution_type=SolutionType.UNIQUE,
-        solution=solution)
+        solution=clean_vector(solution))

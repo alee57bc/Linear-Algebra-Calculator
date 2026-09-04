@@ -2,6 +2,7 @@ from app.algorithms.elimination import rref
 from app.core.matrix import Matrix
 from app.utils.numeric import is_close
 from app.exceptions import NonSquareMatrixError, SingularMatrixError
+from app.utils.cleanup import clean_matrix
 
 def inverse(matrix):
     if matrix.rows != matrix.columns:
@@ -37,4 +38,4 @@ def inverse(matrix):
     for i in range(n):
         inverse_data.append(
             reduced[i][n:])
-    return Matrix(inverse_data)
+    return clean_matrix(Matrix(inverse_data))

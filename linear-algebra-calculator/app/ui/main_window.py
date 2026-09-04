@@ -3,6 +3,8 @@ from app.core.matrix import Matrix
 from app.ui.matrix_editor import MatrixEditor
 from app.ui.result_view import ResultView
 from app.core.basic_operations import add, subtract, scalar_multiply, multiply, transpose
+from app.utils.cleanup import clean_matrix
+from app.exceptions import LinearAlgebraError
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -239,9 +241,9 @@ class MainWindow(QMainWindow):
                 result = transpose(matrix_a)
             else:
                 return
-            self.result_view.update_matrix(result)
+            self.result_view.update_matrix(clean_matrix(result))
 
-        except ValueError as error:
+        except (ValueError, LinearAlgebraError) as error:
             QMessageBox.warning(
                 self,
                 "Invalid Operation",
