@@ -3,6 +3,10 @@ class Vector:
         self._data = [float(value) for value in data]
 
     @property
+    def data(self):
+        return self._data
+
+    @property
     def dimension(self):
         return len(self._data)
 
