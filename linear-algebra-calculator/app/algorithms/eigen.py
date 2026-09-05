@@ -1,10 +1,10 @@
 import cmath
+import math
 from app.core.matrix import Matrix
 from app.core.vector import Vector
 from app.core.basic_operations import multiply
 from app.algorithms.inverse import inverse
 from app.algorithms.elimination import rref
-from app.algorithms.decompositions import qr_decomposition
 from app.results.calculation_step import CalculationStep
 from app.exceptions import NonSquareMatrixError, LinearDependenceError, SingularMatrixError
 from app.utils.numeric import clean_number, is_zero, is_close, clean_complex, format_number
@@ -94,35 +94,100 @@ def eigenvalues(A, max_iterations=1000, record_steps=False):
             return values, steps
         return values
 
-    # General n x n real eigenvalues using QR iteration
+    # Complex shifted QR also handles zero eigenvalues and conjugate pairs.
     current = A.copy()
-
-    for _ in range(max_iterations):
-        Q, R = qr_decomposition(current)
-        current = multiply(R, Q)
-
-        converged = True
-
-        for row in range(1, current.rows):
-            for column in range(row):
-                if not is_zero(current[row][column]):
-                    converged = False
-                    break
-            if not converged:
-                break
-        if converged:
-            break
-    else:
-        raise ValueError("Eigenvalue iteration did not converge.")
-
-    values = [clean_number(current[i][i]) for i in range(current.rows)]
-
+    active = A.rows
+    iterations = 0
     if steps is not None:
-        steps.append(CalculationStep(description="QR iteration converged.", result=current.copy()))
+        steps.append(CalculationStep("Start with A; QR similarity transformations preserve its eigenvalues.", A.copy()))
 
+    while active > 1:
+        scale = max(abs(current[row][col]) for row in range(active) for col in range(active))
+        # Test the entire trailing row because the input need not be Hessenberg.
+        if all(abs(current[active - 1][col]) <= 1e-12 * scale for col in range(active - 1)):
+            for col in range(active - 1):
+                current[active - 1][col] = 0.0
+            if steps is not None:
+                steps.append(CalculationStep(
+                    f"The last row of the active block is triangular. Read eigenvalue "
+                    f"{format_number(current[active - 1][active - 1])} and continue with the smaller block.",
+                    current.copy()))
+            active -= 1
+            continue
+        if iterations >= max_iterations:
+            raise ValueError("Eigenvalue iteration did not converge.")
+
+        a, b = current[active - 2][active - 2], current[active - 2][active - 1]
+        c, d = current[active - 1][active - 2], current[active - 1][active - 1]
+        root = cmath.sqrt(((a - d) / 2) ** 2 + b * c)
+        candidates = [(a + d) / 2 + root, (a + d) / 2 - root]
+        shift = min(candidates, key=lambda value: abs(value - d))
+        # Break occasional cycles when the trailing block gives a poor shift.
+        if iterations and iterations % 20 == 0:
+            shift = d + complex(0.75, 0.25) * scale
+        shifted = Matrix([
+            [current[row][col] - (shift if row == col else 0) for col in range(active)]
+            for row in range(active)])
+        Q, R = _eigen_qr(shifted)
+        next_block = multiply(R, Q)
+        # Apply the same similarity transform to columns outside the active block.
+        trailing = [
+            [sum(complex(Q[k][row]).conjugate() * current[k][col] for k in range(active))
+             for col in range(active, A.rows)]
+            for row in range(active)]
+        for row in range(active):
+            for col in range(active):
+                current[row][col] = next_block[row][col] + (shift if row == col else 0)
+            for col in range(active, A.rows):
+                current[row][col] = trailing[row][col - active]
+        iterations += 1
+        # Keep long calculations readable without building thousands of widgets.
+        if steps is not None and (iterations <= 8 or iterations % 25 == 0):
+            steps.append(CalculationStep(
+                f"QR iteration {iterations}: factor the active block minus "
+                f"({format_number(shift)})I into QR. Q is:", Q.copy()))
+            steps.append(CalculationStep("The corresponding upper triangular R is:", R.copy()))
+            steps.append(CalculationStep(
+                f"Compute RQ + ({format_number(shift)})I for the next active block. "
+                "After iteration 8, intermediate snapshots are shown every 25 iterations.", current.copy()))
+
+    values = [clean_complex(complex(current[i][i])) for i in range(A.rows)]
+    if steps is not None:
+        summary = "\n".join(f"Eigenvalue {i + 1} = {format_number(value)}" for i, value in enumerate(values))
+        steps.append(CalculationStep("Read the eigenvalues from the diagonal:\n" + summary, current.copy()))
+        steps.append(CalculationStep(description="QR iteration converged.", result=current.copy()))
     if record_steps:
         return values, steps
     return values
+
+
+def _eigen_qr(A):
+    """Square complex Householder QR; zero/dependent columns are valid here."""
+    n = A.rows
+    R = [[complex(value) for value in row] for row in A.data]
+    Q = [[complex(row == col) for col in range(n)] for row in range(n)]
+    for pivot in range(n):
+        vector = [R[row][pivot] for row in range(pivot, n)]
+        magnitude = math.hypot(*(abs(value) for value in vector))
+        if magnitude == 0:
+            continue
+        phase = vector[0] / abs(vector[0]) if vector[0] != 0 else 1
+        vector = [value / magnitude for value in vector]
+        vector[0] += phase
+        length = math.hypot(*(abs(value) for value in vector))
+        vector = [value / length for value in vector]
+        for col in range(pivot, n):
+            projection = 2 * sum(value.conjugate() * R[pivot + i][col] for i, value in enumerate(vector))
+            for i, value in enumerate(vector):
+                R[pivot + i][col] -= value * projection
+        for row in range(n):
+            projection = 2 * sum(Q[row][pivot + i] * value for i, value in enumerate(vector))
+            for i, value in enumerate(vector):
+                Q[row][pivot + i] -= projection * value.conjugate()
+        for row in range(pivot + 1, n):
+            R[row][pivot] = 0j
+    return Matrix(Q), Matrix(R)
+
 
 def eigenvectors(A, record_steps=False):
     if record_steps:

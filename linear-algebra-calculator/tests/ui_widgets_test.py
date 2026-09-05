@@ -62,9 +62,9 @@ def test_result_view_replaces_each_result_type(widgets):
     view.update_scalar(1j)
     assert labels(view.matrix_layout) == ["i"]
     view.update_values([2, -1j])
-    assert labels(view.matrix_layout) == ["λ1 = 2", "λ2 = -i"]
+    assert labels(view.matrix_layout) == ["λ₁ = 2", "λ₂ = -i"]
     view.update_vectors([Vector([1, 2])])
-    assert labels(view.matrix_layout) == ["v1 = [1  2]"]
+    assert labels(view.matrix_layout) == ["v₁ = [1  2]"]
     view.update_matrices([("P", Matrix([[1]])), ("D", Matrix([[2]]))])
     assert labels(view.matrix_layout) == ["P =", "1", "D =", "2"]
     view.clear_result()
@@ -84,3 +84,27 @@ def test_step_view_renders_matrix_vector_and_description_only(widgets):
     assert labels(view.content_layout) == ["Step 1: New"]
     view.clear_steps()
     assert view.content_layout.count() == 0
+
+
+def test_eigenvalue_steps_scroll_and_restart_at_top(widgets, qapp):
+    from PySide6.QtCore import Qt
+    from app.algorithms.eigen import eigenvalues
+
+    view = widgets(StepView)
+    view.resize(340, 250)
+    view.show()
+    _, steps = eigenvalues(Matrix([[2, 1], [0, 3]]), record_steps=True)
+    view.update_steps(steps)
+    qapp.processEvents()
+    scrollbar = view.scroll_area.verticalScrollBar()
+    assert scrollbar.isVisible()
+    assert scrollbar.maximum() > 0
+    for index, step in enumerate(steps):
+        label = view.content_layout.itemAt(index).widget()
+        assert label.text() == f"Step {index + 1}: {step.description}"
+        assert label.textFormat() == Qt.PlainText
+        assert label.height() >= label.heightForWidth(label.width())
+    scrollbar.setValue(scrollbar.maximum())
+    view.update_steps(steps)
+    qapp.processEvents()
+    assert scrollbar.value() == 0

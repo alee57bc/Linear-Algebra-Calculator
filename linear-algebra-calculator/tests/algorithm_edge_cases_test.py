@@ -141,4 +141,4 @@ def test_qr_eigenvalue_iteration_converges_and_records_result():
 
 def test_qr_eigenvalue_iteration_reports_nonconvergence():
     with pytest.raises(ValueError, match="did not converge"):
-        eigenvalues(Matrix([[2, 1, 0], [1, 2, 0], [0, 0, 4]]), max_iterations=1)
+        eigenvalues(Matrix([[2, 1, 0], [1, 2, 0], [0, 0, 4]]), max_iterations=0)

@@ -1,4 +1,6 @@
 import os
+import math
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QComboBox, QFileDialog, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QListWidget, QMainWindow, QMessageBox, QPushButton, QTabBar, QVBoxLayout, QWidget
 from PySide6.QtGui import  QKeySequence, QShortcut
 from app.core.matrix import Matrix
@@ -20,6 +22,21 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(950, 700)
         self.current_result = None
         self.controller = CalculationController()
+        self.setStyleSheet("""
+            QGroupBox { font-size: 15px; font-weight: 600; border: 1px solid palette(mid);
+                        border-radius: 8px; margin-top: 12px; padding: 12px; }
+            QGroupBox::title { subcontrol-origin: margin; left: 14px; padding: 0 5px; }
+            QPushButton { padding: 7px 12px; border-radius: 5px; }
+            QPushButton#calculate { background: #2563eb; color: white; font-size: 15px;
+                                    font-weight: 600; padding: 12px; }
+            QPushButton#calculate:hover { background: #1d4ed8; }
+            QPushButton#calculate:disabled { background: palette(mid); color: palette(text); }
+            QComboBox, QLineEdit { padding: 5px; }
+            QListWidget { border: none; }
+            QListWidget::item { padding: 10px 6px; border-bottom: 1px solid palette(mid); }
+            QListWidget::item:selected { background: #dbeafe; color: #1e293b; }
+            QListWidget::item:selected:!active { background: #dbeafe; color: #1e293b; }
+        """)
 
     #------ Keyboard Shortcuts ------
         self.calculate_shortcut = QShortcut(QKeySequence("Ctrl+Return"), self)
@@ -45,6 +62,10 @@ class MainWindow(QMainWindow):
 
     #------ Operations ------
         self.operation_selector = QComboBox()
+        self.operation_description = QLabel()
+        self.operation_description.setWordWrap(True)
+        self.validation_label = QLabel()
+        self.validation_label.setWordWrap(True)
 
         #scalar operations
         self.scalar_input = QLineEdit()
@@ -58,24 +79,41 @@ class MainWindow(QMainWindow):
 
         #calculate button
         self.calculate_button = QPushButton("Calculate")
+        self.calculate_button.setObjectName("calculate")
+        self.calculate_button.setMinimumHeight(44)
         self.calculate_button.clicked.connect(self.calculate)
 
         #operation layout
         operation_layout = QVBoxLayout()
+        operation_layout.setSpacing(12)
         operation_layout.addWidget(self.operation_selector)
+        operation_layout.addWidget(self.operation_description)
         operation_layout.addWidget(self.scalar_widget)
+        operation_layout.addWidget(self.validation_label)
+        operation_layout.addStretch()
         operation_layout.addWidget(self.calculate_button)
 
         self.operation_group = QGroupBox("Operation")
         self.operation_group.setLayout(operation_layout)
+        self.operation_group.setMaximumWidth(260)
         self.operation_selector.currentTextChanged.connect(self.update_operation_ui)
 
     #------ Result ------
         self.result_view = ResultView()
         result_layout = QVBoxLayout()
+        result_actions = QHBoxLayout()
+        result_actions.addStretch()
+        self.copy_result_button = QPushButton("Copy")
+        self.copy_result_button.clicked.connect(self.copy_result)
+        self.clear_result_button = QPushButton("Clear Result")
+        self.clear_result_button.clicked.connect(self.clear_result)
+        result_actions.addWidget(self.copy_result_button)
+        result_actions.addWidget(self.clear_result_button)
+        result_layout.addLayout(result_actions)
         result_layout.addWidget(self.result_view)
         self.result_group = QGroupBox("Result")
         self.result_group.setLayout(result_layout)
+        self.result_group.setMinimumHeight(220)
 
     #------ Keyboard Shortcut Help ------
         shortcut_layout = QVBoxLayout()
@@ -92,15 +130,21 @@ class MainWindow(QMainWindow):
     #------ History ------
         self.history_manager = HistoryManager()
         self.history_list = QListWidget()
+        self.history_list.setSpacing(3)
+        self.history_list.setWordWrap(True)
+        self.history_empty_label = QLabel("No history yet")
+        self.history_empty_label.setAlignment(Qt.AlignCenter)
         self.history_list.itemClicked.connect(self.show_history_entry)
         self.clear_history_button = QPushButton("Clear History")
         self.clear_history_button.clicked.connect(self.clear_history)
 
         history_layout = QVBoxLayout()
+        history_layout.addWidget(self.history_empty_label)
         history_layout.addWidget(self.history_list)
         history_layout.addWidget(self.clear_history_button)
         self.history_group = QGroupBox("History")
         self.history_group.setLayout(history_layout)
+        self.history_group.setMinimumHeight(220)
 
     #------ Import / Export ------
         self.import_button = QPushButton("Import Matrix")
@@ -115,26 +159,29 @@ class MainWindow(QMainWindow):
 
     #------ Main grid ------
         content_layout = QGridLayout()
-        content_layout.addWidget(self.matrix_a_panel, 0, 0)
-        content_layout.addWidget(self.operation_group, 0, 1)
-        content_layout.addWidget(self.matrix_b_panel, 0, 2)
-
-        content_layout.addWidget(self.shortcut_group, 1, 0)
-        content_layout.addWidget(self.result_group, 1, 1)
-
-        content_layout.addWidget(self.step_view, 2, 0, 1, 2)
-        content_layout.addWidget(self.history_group, 2, 2)
-
+        content_layout.setSpacing(16)
+        input_layout = QHBoxLayout()
+        input_layout.setSpacing(16)
+        input_layout.addWidget(self.matrix_a_panel, 1)
+        input_layout.addWidget(self.operation_group)
+        input_layout.addWidget(self.matrix_b_panel, 1)
+        content_layout.addLayout(input_layout, 0, 0, 1, 2)
+        content_layout.addWidget(self.result_group, 1, 0, 1, 2)
+        content_layout.addWidget(self.step_view, 2, 0, 2, 1)
+        content_layout.addWidget(self.history_group, 2, 1, 2, 1)
+        self.shortcut_group.hide()
+        self.tabs.setToolTip("Ctrl+Enter: Calculate · Ctrl+L: Clear inputs/results · Ctrl+C: Copy result · Ctrl+V: Paste Matrix A")
         content_layout.setColumnStretch(0, 3)
-        content_layout.setColumnStretch(1, 2)
-        content_layout.setColumnStretch(2, 3)
-
+        content_layout.setColumnStretch(1, 1)
         content_layout.setRowStretch(0, 3)
-        content_layout.setRowStretch(1, 2)
+        content_layout.setRowStretch(1, 4)
         content_layout.setRowStretch(2, 3)
+        content_layout.setRowStretch(3, 1)
 
     #------ Main outer layout ------
         main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(20, 16, 20, 16)
+        main_layout.setSpacing(16)
         main_layout.addWidget(self.tabs)
         main_layout.addLayout(content_layout)
         main_layout.addLayout(file_layout)
@@ -144,6 +191,11 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
         #initialize basic tab
+        self.matrix_a_panel.input_changed.connect(self.validate_inputs)
+        self.matrix_b_panel.input_changed.connect(self.validate_inputs)
+        self.scalar_input.textChanged.connect(self.validate_inputs)
+        self.update_result_actions()
+        self.update_history_state()
         self.update_operation_tab(0)
 
 #------ Tabs ------
@@ -181,8 +233,75 @@ class MainWindow(QMainWindow):
             "Matrix Multiplication",]
 
         self.matrix_b_panel.setVisible(needs_matrix_b)
+        policy = self.matrix_b_panel.sizePolicy()
+        policy.setRetainSizeWhenHidden(True)
+        self.matrix_b_panel.setSizePolicy(policy)
         needs_scalar = (operation == "Scalar Multiplication")
         self.scalar_widget.setVisible(needs_scalar)
+        descriptions = {
+            "Addition": "Compute A + B", "Subtraction": "Compute A − B",
+            "Scalar Multiplication": "Multiply A by a scalar",
+            "Matrix Multiplication": "Compute AB", "Transpose": "Compute Aᵀ",
+            "Gaussian Elimination": "Reduce A to row echelon form",
+            "RREF": "Reduce A to reduced row echelon form",
+            "Determinant": "Compute det(A)", "Inverse": "Compute A⁻¹",
+            "Gram-Schmidt": "Orthonormalize the columns of A",
+            "LU Decomposition": "Factor PA into LU", "QR Decomposition": "Factor A into QR",
+            "Eigenvalues": "Find eigenvalues of A", "Eigenvectors": "Find eigenvectors of A",
+            "Diagonalization": "Factor A into PDP⁻¹",
+        }
+        self.operation_description.setText(descriptions.get(operation, ""))
+        self.validate_inputs()
+
+    def validate_inputs(self):
+        operation = self.operation_selector.currentText()
+        a, b = self.matrix_a_panel.editor, self.matrix_b_panel.editor
+        message = ""
+        if not a.has_valid_input():
+            message = "Enter finite numbers in Matrix A."
+        elif operation in {"Addition", "Subtraction", "Matrix Multiplication"}:
+            if not b.has_valid_input():
+                message = "Enter finite numbers in Matrix B."
+            elif operation == "Matrix Multiplication" and a.columnCount() != b.rowCount():
+                message = "A columns must match B rows."
+            elif operation != "Matrix Multiplication" and (a.rowCount(), a.columnCount()) != (b.rowCount(), b.columnCount()):
+                message = "A and B must have the same dimensions."
+        elif operation == "Scalar Multiplication":
+            try:
+                if not math.isfinite(float(self.scalar_input.text())):
+                    raise ValueError
+            except ValueError:
+                message = "Enter a finite numeric scalar."
+        elif operation in {"Determinant", "Inverse", "LU Decomposition", "Eigenvalues", "Eigenvectors", "Diagonalization"}:
+            if a.rowCount() != a.columnCount():
+                message = "This operation requires a square Matrix A."
+        elif operation in {"QR Decomposition", "Gram-Schmidt"} and a.rowCount() < a.columnCount():
+            message = "A must have at least as many rows as columns."
+        valid = bool(operation) and not message
+        self.calculate_button.setEnabled(valid)
+        self.calculate_shortcut.setEnabled(valid)
+        self.calculate_enter_shortcut.setEnabled(valid)
+        self.validation_label.setText(message)
+        self.validation_label.setVisible(bool(message))
+        return valid
+
+    def update_result_actions(self):
+        available = self.current_result is not None
+        self.copy_result_button.setEnabled(available)
+        self.clear_result_button.setEnabled(available)
+        self.export_button.setEnabled(available)
+
+    def update_history_state(self):
+        available = self.history_list.count() > 0
+        self.history_empty_label.setVisible(not available)
+        self.history_list.setVisible(available)
+        self.clear_history_button.setEnabled(available)
+
+    def clear_result(self):
+        self.current_result = None
+        self.result_view.clear_result()
+        self.step_view.clear_steps()
+        self.update_result_actions()
 
 #------ History ------
     def show_history_entry(self, item):
@@ -243,10 +362,12 @@ class MainWindow(QMainWindow):
             self.result_view.update_scalar(entry.result)
 
         self.current_result = entry.result
+        self.update_result_actions()
 
     def clear_history(self):
         self.history_manager.clear()
         self.history_list.clear()
+        self.update_history_state()
 
 #------ Clear ------
     def clear_inputs(self):
@@ -267,6 +388,7 @@ class MainWindow(QMainWindow):
         self.result_view.clear_result()
 
         self.current_result = None
+        self.update_result_actions()
 
 #------ Copy and Paste ------
     def copy_result(self):
@@ -353,6 +475,8 @@ class MainWindow(QMainWindow):
 
 #------ Calculate ------
     def calculate(self):
+        if not self.validate_inputs():
+            return
         operation = self.operation_selector.currentText()
         matrix_a = self.matrix_a_panel.get_matrix()
 
@@ -402,6 +526,7 @@ class MainWindow(QMainWindow):
                 self.result_view.update_scalar(calculation.result)
 
             self.current_result = (calculation.result)
+            self.update_result_actions()
 
             #history
             inputs = [matrix_a]
@@ -414,7 +539,16 @@ class MainWindow(QMainWindow):
 
             self.history_manager.add_entry(operation, inputs, calculation.result, steps=calculation.steps, extra_results=calculation.extra_results)
 
-            self.history_list.addItem(f"{len(self.history_manager)}. " f"{operation}")
+            summary = f"{matrix_a.rows}×{matrix_a.columns}"
+            if matrix_b is not None:
+                summary += f" / {matrix_b.rows}×{matrix_b.columns}"
+            if scalar is not None:
+                summary += f" · scalar {format_number(scalar)}"
+            self.history_list.addItem(f"{operation} — {summary}")
+            item = self.history_list.item(self.history_list.count() - 1)
+            item.setToolTip(f"{operation} — {summary}\nClick to restore inputs, result and steps.")
+            self.history_list.scrollToBottom()
+            self.update_history_state()
 
         except DimensionMismatchError:
             QMessageBox.warning(self, "Dimension Mismatch", "The matrix or vector dimensions are incompatible " "for this operation.")

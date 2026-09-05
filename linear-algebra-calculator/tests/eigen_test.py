@@ -183,3 +183,34 @@ def test_defective_repeated_eigenvalue():
     vectors = eigenvectors(A)
 
     assert len(vectors) == 1
+
+
+@pytest.mark.parametrize("data, expected", [
+    ([[0]], [0]),
+    ([[0, 0, 0], [0, 0, 0], [0, 0, 0]], [0, 0, 0]),
+    ([[0, 0, 0], [0, 2, 0], [0, 0, 3]], [0, 2, 3]),
+    ([[0, 1, 0], [0, 0, 1], [0, 0, 0]], [0, 0, 0]),
+    ([[1, 1, 1], [1, 1, 1], [1, 1, 1]], [0, 0, 3]),
+    ([[0, 1, 0], [1, 0, 0], [0, 0, 2]], [-1, 1, 2]),
+    ([[0, -1, 0], [1, 0, 0], [0, 0, 0]], [-1j, 1j, 0]),
+    ([[0, 0, 1], [1, 0, 0], [0, 1, 0]], [1, complex(-0.5, 3 ** 0.5 / 2), complex(-0.5, -3 ** 0.5 / 2)]),
+])
+def test_eigenvalues_with_zeros_and_complex_pairs(data, expected):
+    matrix = Matrix(data)
+    original = matrix.copy()
+    values, steps = eigenvalues(matrix, record_steps=True)
+    remaining = list(values)
+    for value in expected:
+        closest = min(remaining, key=lambda candidate: abs(candidate - value))
+        assert closest == pytest.approx(value, abs=1e-8)
+        remaining.remove(closest)
+    assert not remaining
+    assert matrix == original
+    assert len(steps) > 1
+
+
+def test_general_eigenvalues_record_intermediate_qr_steps():
+    _, steps = eigenvalues(Matrix([[2, 1, 0], [1, 2, 0], [0, 0, 4]]), record_steps=True)
+    assert any("QR iteration 1:" in step.description for step in steps)
+    assert any("Compute RQ" in step.description for step in steps)
+    assert any("Read the eigenvalues" in step.description for step in steps)

@@ -1,10 +1,15 @@
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QGroupBox, QHBoxLayout, QLabel, QPushButton, QSpinBox, QVBoxLayout
 from app.core.matrix import Matrix
 from app.ui.matrix_editor import MatrixEditor
 
 class MatrixPanel(QGroupBox):
+    input_changed = Signal()
+
     def __init__(self, title):
         super().__init__(title)
+        self.base_title = title
+        self.setMinimumSize(280, 210)
         self.matrix = Matrix([[0, 0], [0, 0]])
         self.rows = 2
         self.columns = 2
@@ -18,6 +23,9 @@ class MatrixPanel(QGroupBox):
         self.columns_spinbox.setRange(1, 10)
         self.columns_spinbox.setValue(self.columns)
 
+        for spinbox in (self.rows_spinbox, self.columns_spinbox):
+            spinbox.setMinimumSize(80, 32)
+
         dimensions_layout = QHBoxLayout()
 
         dimensions_layout.addWidget(QLabel("Rows:"))
@@ -27,6 +35,8 @@ class MatrixPanel(QGroupBox):
         dimensions_layout.addWidget(self.columns_spinbox)
 
         layout = QVBoxLayout()
+        layout.setContentsMargins(14, 20, 14, 14)
+        layout.setSpacing(10)
         layout.addLayout(dimensions_layout)
         layout.addWidget(self.editor)
 
@@ -34,6 +44,8 @@ class MatrixPanel(QGroupBox):
 
         self.rows_spinbox.valueChanged.connect(self.change_dimensions)
         self.columns_spinbox.valueChanged.connect(self.change_dimensions)
+        self.editor.itemChanged.connect(lambda _item: self.input_changed.emit())
+        self.setTitle(f"{self.base_title} (2 × 2)")
 
     def get_matrix(self):
         return self.editor.get_matrix()
@@ -51,6 +63,9 @@ class MatrixPanel(QGroupBox):
         self.columns_spinbox.blockSignals(False)
 
         self.editor.update_matrix(matrix)
+        self.rows, self.columns = matrix.rows, matrix.columns
+        self.setTitle(f"{self.base_title} ({matrix.rows} × {matrix.columns})")
+        self.input_changed.emit()
 
     def change_dimensions(self):
         old_matrix = self.editor.get_matrix()

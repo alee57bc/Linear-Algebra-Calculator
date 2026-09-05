@@ -87,8 +87,38 @@ def test_operation_controls_and_invalid_scalar(window):
     assert not window.scalar_widget.isHidden()
     window.scalar_input.setText("invalid")
     window.calculate()
-    assert window.warning.call_args.args[1] == "Invalid Scalar"
+    assert not window.calculate_button.isEnabled()
+    window.warning.assert_not_called()
     assert len(window.history_manager) == 0
+
+
+def test_validation_tracks_required_inputs_and_dimensions(window):
+    window.matrix_b_panel.editor.item(0, 0).setText("nan")
+    assert not window.calculate_button.isEnabled()
+    window.operation_selector.setCurrentText("Transpose")
+    assert window.calculate_button.isEnabled()
+    window.matrix_a_panel.editor.item(0, 0).setText("bad")
+    assert not window.calculate_button.isEnabled()
+    window.matrix_a_panel.set_matrix(Matrix([[1, 2, 3], [4, 5, 6]]))
+    assert window.calculate_button.isEnabled()
+    window.tabs.setCurrentIndex(1)
+    window.operation_selector.setCurrentText("Inverse")
+    assert not window.calculate_button.isEnabled()
+    window.matrix_a_panel.set_matrix(Matrix([[1, 0], [0, 1]]))
+    assert window.calculate_button.isEnabled()
+    assert window.calculate_shortcut.isEnabled()
+
+
+def test_clear_result_preserves_inputs_and_history(window):
+    window.calculate()
+    assert window.copy_result_button.isEnabled()
+    assert "Addition — 2×2" in window.history_list.item(0).text()
+    window.clear_result_button.click()
+    assert window.current_result is None
+    assert not window.copy_result_button.isEnabled()
+    assert not window.result_view.empty_label.isHidden()
+    assert not window.step_view.empty_label.isHidden()
+    assert len(window.history_manager) == 1
 
 
 def test_copy_and_paste(window, qapp):
