@@ -6,7 +6,7 @@ from app.algorithms.inverse import inverse
 from app.algorithms.elimination import rref
 from app.algorithms.decompositions import qr_decomposition
 from app.exceptions import NonSquareMatrixError
-from app.utils.numeric import clean_number, is_zero, clean_complex
+from app.utils.numeric import clean_number, is_zero, is_close, clean_complex
 from app.exceptions import LinearDependenceError, SingularMatrixError
 
 def eigenvalues(A, max_iterations=1000):
@@ -56,9 +56,20 @@ def eigenvalues(A, max_iterations=1000):
 
 def eigenvectors(A):
     values = eigenvalues(A)
+    vectors = []
+    processed = []
 
-    return [eigenvector_for_value(A, eigenvalue)
-        for eigenvalue in values]
+    for eigenvalue in values:
+        already_processed = any(is_close(eigenvalue, processed_value) for processed_value in processed)
+
+        if already_processed:
+            continue
+
+        basis = eigenspace_basis(A, eigenvalue)
+        vectors.extend(basis)
+        processed.append(eigenvalue)
+
+    return vectors
 
 def diagonalize(A):
     values = eigenvalues(A)
@@ -134,3 +145,57 @@ def eigenvector_for_value(A: Matrix, eigenvalue):
         vector[pivot_column] = -total
 
     return Vector(vector)
+
+def eigenspace_basis(A: Matrix, eigenvalue):
+    n = A.rows
+
+    shifted = Matrix([
+        [A[row][column]
+            - (eigenvalue if row == column else 0.0)
+            for column in range(n)]
+        for row in range(n)])
+
+    reduced = rref(shifted)
+
+    pivot_columns = []
+
+    for row in range(reduced.rows):
+        for column in range(n):
+            if not is_zero(reduced[row][column]):
+                pivot_columns.append(column)
+                break
+
+    free_columns = [
+        column
+        for column in range(n)
+        if column not in pivot_columns]
+
+    basis = []
+
+    for free_column in free_columns:
+        vector = [0.0] * n
+        vector[free_column] = 1.0
+
+        for row in range(reduced.rows - 1, -1, -1):
+            pivot_column = None
+
+            for column in range(n):
+                if not is_zero(reduced[row][column]):
+                    pivot_column = column
+                    break
+
+            if pivot_column is None:
+                continue
+
+            total = 0.0
+
+            for column in range(pivot_column + 1, n):
+                total += (
+                    reduced[row][column]
+                    * vector[column])
+
+            vector[pivot_column] = -total
+
+        basis.append(Vector(vector))
+
+    return basis

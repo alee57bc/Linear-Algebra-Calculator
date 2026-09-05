@@ -92,7 +92,7 @@ def test_eigenvectors_repeated_eigenvalue():
     ])
     vectors = eigenvectors(A)
 
-    assert len(vectors) == 2
+    assert len(vectors) == 1
 
 def test_diagonalization_reconstructs_matrix():
     A = Matrix([
@@ -167,3 +167,27 @@ def test_complex_eigenvectors():
             for value in vector.data]
 
         assert Av.data == pytest.approx(expected)
+
+def test_repeated_eigenvalue_full_eigenspace():
+    A = Matrix([
+        [2, 0],
+        [0, 2]
+    ])
+    vectors = eigenvectors(A)
+
+    assert len(vectors) == 2
+
+    for vector in vectors:
+        Av = matrix_vector_multiply(A, vector)
+        expected = [2 * value for value in vector.data]
+
+        assert Av.data == pytest.approx(expected)
+
+def test_defective_repeated_eigenvalue():
+    A = Matrix([
+        [2, 1],
+        [0, 2]
+    ])
+    vectors = eigenvectors(A)
+
+    assert len(vectors) == 1

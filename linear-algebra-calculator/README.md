@@ -5,7 +5,6 @@ TODO:
 - Add mathematical property tests
 
 Limitations:
-- Repeated-eigenvalue eigenspace handling could be improved
 - UI support for complex result
 - 
 Step View:
