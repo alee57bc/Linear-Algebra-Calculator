@@ -27,3 +27,12 @@ def test_vector_rejects_non_list_data():
 def test_vector_rejects_non_numeric_values():
     with pytest.raises(ValueError):
         Vector([1, 2, "hello"])
+
+def test_vector_accepts_complex_values():
+    v = Vector([
+        1 + 2j,
+        3 - 4j
+    ])
+
+    assert v[0] == 1 + 2j
+    assert v[1] == 3 - 4j

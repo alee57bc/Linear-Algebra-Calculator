@@ -53,3 +53,21 @@ def test_least_squares_dependent_columns():
 
     with pytest.raises(LinearDependenceError):
         least_squares(A, b)
+
+def test_least_squares_qr_result():
+    A = Matrix([
+        [1, 0],
+        [1, 1],
+        [1, 2]
+    ])
+    b = Vector([
+        1,
+        2,
+        2
+    ])
+    result = least_squares(A, b)
+
+    assert result.data == pytest.approx([
+        1.1666666667,
+        0.5
+    ])

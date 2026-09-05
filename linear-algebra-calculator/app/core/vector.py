@@ -1,3 +1,5 @@
+from app.utils.numeric import to_numeric
+
 class Vector:
     def __init__(self, data):
         if not isinstance(data, list):
@@ -8,14 +10,11 @@ class Vector:
 
         try:
             self._data = [
-                float(value)
+                to_numeric(value)
                 for value in data
             ]
         except (TypeError, ValueError):
-            raise ValueError(
-                "Vector values must be numeric."
-            )
-        self._data = [float(value) for value in data]
+            raise ValueError("Vector values must be numeric.")
 
     @property
     def data(self):
@@ -32,7 +31,7 @@ class Vector:
         return self._data[index]
 
     def __setitem__(self, index, value):
-        self._data[index] = float(value)
+        self._data[index] = to_numeric(value)
 
     def __str__(self):
         return "[" + " ".join(map(str, self._data)) + "]"

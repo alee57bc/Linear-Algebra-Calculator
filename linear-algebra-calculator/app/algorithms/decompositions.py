@@ -2,6 +2,7 @@ from app.core.matrix import Matrix
 from app.core.vector import Vector
 from app.core.basic_operations import transpose, multiply
 from app.algorithms.gram_schmidt import gram_schmidt
+from app.algorithms.elimination import swap_rows
 from app.core.basic_vector_operations import norm
 from app.utils.numeric import is_zero
 from app.exceptions import LinearDependenceError, NonSquareMatrixError, SingularMatrixError
@@ -49,33 +50,53 @@ def lu_decomposition(A, record_steps=False):
         raise NonSquareMatrixError
 
     steps = [] if record_steps else None
-
     n = A.rows
     L = Matrix([
         [0.0 for _ in range(n)]
         for _ in range(n)])
     U = A.copy()
 
+    P = Matrix([[1.0 if i == j else 0.0 for j in range(n)]
+        for i in range(n)])
+
     for i in range(n):
         L[i][i] = 1.0
 
     for pivot in range(n):
-        pivot_value = U[pivot][pivot]
-        if is_zero(pivot_value):
+        pivot_row = None
+
+        for row in range(pivot, n):
+            if not is_zero(U[row][pivot]):
+                pivot_row = row
+                break
+
+        if pivot_row is None:
             raise SingularMatrixError
+
+        if pivot_row != pivot:
+            swap_rows(U, pivot, pivot_row)
+            swap_rows(P, pivot, pivot_row)
+
+            # Only swap the part of L that has already been built
+            for column in range(pivot):
+                L[pivot][column], L[pivot_row][column] = (L[pivot_row][column], L[pivot][column],)
+
+            if steps is not None:
+                steps.append(CalculationStep(description=(f"Swap R{pivot + 1} and R{pivot_row + 1}"), result=U.copy(),))
+
+        pivot_value = U[pivot][pivot]
+
         for row in range(pivot + 1, n):
             multiplier = U[row][pivot] / pivot_value
             L[row][pivot] = multiplier
+
             for column in range(pivot, n):
                 U[row][column] -= (multiplier * U[pivot][column])
 
             if steps is not None:
-                steps.append(
-                    CalculationStep(
-                        description=(f"R{row + 1} ← R{row + 1} - ({multiplier})R{pivot + 1}"),
-                        result=U.copy()))
+                steps.append(CalculationStep(description=(f"R{row + 1} ← R{row + 1} " f"- ({multiplier})R{pivot + 1}"), result=U.copy(),))
 
     if record_steps:
-        return L, U, steps
+        return P, L, U, steps
 
-    return L, U
+    return P, L, U

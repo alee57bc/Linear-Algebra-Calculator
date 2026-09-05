@@ -67,8 +67,8 @@ class CalculationController:
             return CalculationResult(result=result, steps=steps)
 
         if operation == "LU Decomposition":
-            L, U, steps = lu_decomposition(matrix_a, record_steps=True)
-            return CalculationResult(result=U, steps=steps, extra_results=[("L", L), ("U", U),])
+            P, L, U, steps = lu_decomposition(matrix_a, record_steps=True)
+            return CalculationResult(result=U, steps=steps, extra_results=[("P", P), ("L", L), ("U", U),])
 
         if operation == "QR Decomposition":
             Q, R, steps = qr_decomposition(matrix_a, record_steps=True)

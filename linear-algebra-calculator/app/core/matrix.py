@@ -1,3 +1,5 @@
+from app.utils.numeric import to_numeric
+
 class Matrix:
      def __init__(self, data):
          #check inputs
@@ -19,11 +21,9 @@ class Matrix:
              if len(row) != column_count:
                  raise ValueError("All matrix rows must have the same length.")
          try:
-             self._data = [[float(value) for value in row] for row in data]
+             self._data = [[to_numeric(value) for value in row] for row in data]
          except (TypeError, ValueError):
              raise ValueError("Matrix values must be numeric.")
-
-         self._data = [[float(value) for value in row] for row in data]
 
      def __eq__(self, other):
          if not isinstance(other, Matrix):
@@ -49,7 +49,7 @@ class Matrix:
          return self._data[index]
 
      def __setitem__(self, index, value):
-         self._data[index] = value
+         self._data[index] = [to_numeric(item) for item in value]
 
      def copy(self):
          return Matrix([row[:] for row in self._data])

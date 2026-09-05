@@ -1,7 +1,7 @@
 import pytest
 from app.core.matrix import Matrix
 from app.exceptions import NonSquareMatrixError, LinearDependenceError
-from app.algorithms.eigen import eigenvalues, eigenvectors, diagonalize
+from app.algorithms.eigen import eigenvalues, eigenvectors, diagonalize, eigenvector_for_value
 from app.core.basic_operations import multiply, matrix_vector_multiply
 from app.utils.numeric import is_zero, is_close
 
@@ -125,3 +125,45 @@ def test_non_diagonalizable_matrix():
     with pytest.raises(LinearDependenceError):
         diagonalize(A)
 
+def test_eigenvectors_3x3_diagonal():
+    A = Matrix([
+        [2, 0, 0],
+        [0, 3, 0],
+        [0, 0, 5]
+    ])
+
+    values = eigenvalues(A)
+    vectors = eigenvectors(A)
+
+    for eigenvalue, vector in zip(values, vectors):
+        Av = matrix_vector_multiply(A, vector)
+
+        expected = [eigenvalue * value
+            for value in vector.data]
+
+        assert Av.data == pytest.approx(expected)
+
+def test_eigenvalues_3x3_triangular():
+    A = Matrix([
+        [1, 4, 2],
+        [0, 3, 5],
+        [0, 0, 6]
+    ])
+    result = eigenvalues(A)
+
+    assert set(result) == {1.0, 3.0, 6.0}
+
+def test_complex_eigenvectors():
+    A = Matrix([
+        [0, -1],
+        [1, 0]
+    ])
+    values = eigenvalues(A)
+    vectors = eigenvectors(A)
+
+    for eigenvalue, vector in zip(values, vectors):
+        Av = matrix_vector_multiply(A, vector)
+        expected = [eigenvalue * value
+            for value in vector.data]
+
+        assert Av.data == pytest.approx(expected)

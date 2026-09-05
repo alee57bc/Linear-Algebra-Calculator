@@ -1,62 +1,66 @@
-import math
+import cmath
 from app.core.matrix import Matrix
 from app.core.vector import Vector
+from app.core.basic_operations import multiply
 from app.algorithms.inverse import inverse
+from app.algorithms.elimination import rref
+from app.algorithms.decompositions import qr_decomposition
 from app.exceptions import NonSquareMatrixError
-from app.utils.numeric import clean_number, is_zero
+from app.utils.numeric import clean_number, is_zero, clean_complex
 from app.exceptions import LinearDependenceError, SingularMatrixError
 
-def eigenvalues(A: Matrix):
+def eigenvalues(A, max_iterations=1000):
     if A.rows != A.columns:
         raise NonSquareMatrixError
 
-    if A.rows != 2:
-        raise NotImplementedError(
-            "Eigenvalues are currently implemented only for 2x2 matrices."
-        )
-
-    a = A[0][0]
-    b = A[0][1]
-    c = A[1][0]
-    d = A[1][1]
-    trace = a + d
-    det = a * d - b * c
-    discriminant = trace ** 2 - 4 * det
-
-    if discriminant < 0 and not is_zero(discriminant):
-        raise ValueError("Matrix has complex eigenvalues.")
-
-    if is_zero(discriminant):
-        discriminant = 0.0
-
-    sqrt_discriminant = math.sqrt(discriminant)
-    lambda1 = (trace + sqrt_discriminant) / 2
-    lambda2 = (trace - sqrt_discriminant) / 2
-    return [clean_number(lambda1), clean_number(lambda2)]
-
-def eigenvectors(A: Matrix):
-    values = eigenvalues(A)
-    vectors = []
-
-    for eigenvalue in values:
-        a = A[0][0] - eigenvalue
+    # Keep exact 2x2 handling
+    if A.rows == 2:
+        a = A[0][0]
         b = A[0][1]
         c = A[1][0]
-        d = A[1][1] - eigenvalue
+        d = A[1][1]
 
-        if not is_zero(b):
-            vector = Vector([1.0, -a / b])
-        elif not is_zero(c):
-            vector = Vector([-d / c, 1.0])
-        else:
-            if is_zero(a):
-                vector = Vector([1.0, 0.0])
-            else:
-                vector = Vector([0.0, 1.0])
-        vectors.append(vector)
-    return vectors
+        trace = a + d
+        det = a * d - b * c
+        discriminant = trace ** 2 - 4 * det
 
-def diagonalize(A: Matrix):
+        sqrt_discriminant = cmath.sqrt(discriminant)
+
+        lambda1 = (trace + sqrt_discriminant) / 2
+        lambda2 = (trace - sqrt_discriminant) / 2
+
+        return [clean_complex(lambda1), clean_complex(lambda2),]
+
+    # General n x n real eigenvalues using QR iteration
+    current = A.copy()
+
+    for _ in range(max_iterations):
+        Q, R = qr_decomposition(current)
+        current = multiply(R, Q)
+
+        converged = True
+
+        for row in range(1, current.rows):
+            for column in range(row):
+                if not is_zero(current[row][column]):
+                    converged = False
+                    break
+            if not converged:
+                break
+        if converged:
+            break
+    else:
+        raise ValueError("Eigenvalue iteration did not converge.")
+
+    return [clean_number(current[i][i]) for i in range(current.rows)]
+
+def eigenvectors(A):
+    values = eigenvalues(A)
+
+    return [eigenvector_for_value(A, eigenvalue)
+        for eigenvalue in values]
+
+def diagonalize(A):
     values = eigenvalues(A)
     vectors = eigenvectors(A)
 
@@ -78,3 +82,55 @@ def diagonalize(A: Matrix):
         for row in range(A.rows)])
 
     return P, D, P_inverse
+
+def eigenvector_for_value(A: Matrix, eigenvalue):
+    n = A.rows
+
+    shifted = Matrix([
+        [A[row][column]
+            - (eigenvalue if row == column else 0.0)
+            for column in range(n)]
+        for row in range(n)])
+
+    reduced = rref(shifted)
+
+    pivot_columns = []
+
+    for row in range(reduced.rows):
+        for column in range(reduced.columns):
+            if not is_zero(reduced[row][column]):
+                pivot_columns.append(column)
+                break
+
+    free_columns = [
+        column
+        for column in range(n)
+        if column not in pivot_columns]
+
+    if not free_columns:
+        raise ValueError("Could not determine an eigenvector.")
+
+    free_column = free_columns[-1]
+
+    vector = [0.0] * n
+    vector[free_column] = 1.0
+
+    for row in range(reduced.rows - 1, -1, -1):
+        pivot_column = None
+
+        for column in range(n):
+            if not is_zero(reduced[row][column]):
+                pivot_column = column
+                break
+
+        if pivot_column is None:
+            continue
+
+        total = 0.0
+
+        for column in range(pivot_column + 1, n):
+            total += (reduced[row][column] * vector[column])
+
+        vector[pivot_column] = -total
+
+    return Vector(vector)

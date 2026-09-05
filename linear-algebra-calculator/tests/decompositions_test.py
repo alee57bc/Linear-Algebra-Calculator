@@ -46,32 +46,36 @@ def test_lu_reconstructs_matrix():
         [2, 3],
         [4, 7]
     ])
-    L, U = lu_decomposition(A)
-    reconstructed = multiply(L, U)
+    P, L, U = lu_decomposition(A)
+
+    left = multiply(P, A)
+    right = multiply(L, U)
 
     for i in range(A.rows):
         for j in range(A.columns):
-            assert is_close(reconstructed[i][j], A[i][j])
+            assert is_close(
+                left[i][j],
+                right[i][j])
 
 def test_l_is_lower_triangular():
     A = Matrix([
         [2, 3],
         [4, 7]
     ])
-    L, U = lu_decomposition(A)
+    P, L, U = lu_decomposition(A)
 
-    assert L[0][1] == pytest.approx(0.0)
-    assert L[0][0] == pytest.approx(1.0)
-    assert L[1][1] == pytest.approx(1.0)
+    assert is_zero(L[0][1])
+    assert is_close(L[0][0], 1.0)
+    assert is_close(L[1][1], 1.0)
 
 def test_u_is_upper_triangular():
     A = Matrix([
         [2, 3],
         [4, 7]
     ])
-    L, U = lu_decomposition(A)
+    P, L, U = lu_decomposition(A)
 
-    assert U[1][0] == pytest.approx(0.0)
+    assert is_zero(U[1][0])
 
 def test_lu_requires_square_matrix():
     A = Matrix([
@@ -81,10 +85,18 @@ def test_lu_requires_square_matrix():
     with pytest.raises(NonSquareMatrixError):
         lu_decomposition(A)
 
-def test_lu_zero_pivot():
+def test_lu_with_row_pivoting():
     A = Matrix([
         [0, 1],
         [1, 1]
     ])
-    with pytest.raises(SingularMatrixError):
-        lu_decomposition(A)
+    P, L, U = lu_decomposition(A)
+
+    left = multiply(P, A)
+    right = multiply(L, U)
+
+    for i in range(A.rows):
+        for j in range(A.columns):
+            assert is_close(
+                left[i][j],
+                right[i][j])
