@@ -1,11 +1,13 @@
 from app.algorithms.elimination import swap_rows, add_multiple_of_row
 from app.utils.numeric import is_zero, clean_number
 from app.exceptions import NonSquareMatrixError
+from app.results.calculation_step import CalculationStep
+from app.algorithms.elimination import record_step
 
-def determinant(matrix):
+def determinant(matrix, record_steps=False):
     if matrix.rows != matrix.columns:
         raise NonSquareMatrixError
-
+    steps = [] if record_steps else None
     result = matrix.copy()
     det = 1.0
     swap_count = 0
@@ -27,6 +29,8 @@ def determinant(matrix):
             swap_rows(result, pivot, pivot_column)
             swap_count += 1
 
+            record_step(steps, f"R{pivot_column + 1} ↔ R{pivot + 1}", result)
+
         pivot_value = result[pivot_column][pivot_column]
 
         # Eliminate values below pivot
@@ -34,6 +38,8 @@ def determinant(matrix):
             if not is_zero(result[row][pivot_column]):
                 scalar = result[row][pivot_column] / pivot_value
                 add_multiple_of_row(result, pivot_column, row, -scalar)
+                record_step(steps, f"R{row + 1} ← R{row + 1} + ({-scalar})R{pivot_column + 1}", result)
+
     # Product of diagonal
     for i in range(result.rows):
         det *= result[i][i]
@@ -41,4 +47,8 @@ def determinant(matrix):
     # Each row swap changes the sign
     if swap_count % 2 == 1:
         det *= -1
-    return clean_number(det)
+
+    det = clean_number(det)
+    if record_steps:
+        return det, steps
+    return det

@@ -1,4 +1,6 @@
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QGroupBox, QScrollArea, QWidget
+from app.core.matrix import Matrix
+from app.core.vector import Vector
 
 class StepView(QGroupBox):
     def __init__(self):
@@ -36,7 +38,15 @@ class StepView(QGroupBox):
         for index, step in enumerate(steps, start=1):
             description = QLabel(f"Step {index}: {step.description}")
             self.content_layout.addWidget(description)
+            result = step.result
 
-            for row in step.matrix.data:
-                row_label = QLabel("  ".join(str(value) for value in row))
-                self.content_layout.addWidget(row_label)
+            if isinstance(result, Matrix):
+                for row in result.data:
+                    row_label = QLabel("  ".join(str(value) for value in row))
+                    self.content_layout.addWidget(row_label)
+
+            elif isinstance(result, Vector):
+                vector_label = QLabel("[" + "  ".join(str(value) for value in result.data) + "]")
+                self.content_layout.addWidget(vector_label)
+
+        self.content_layout.addStretch()

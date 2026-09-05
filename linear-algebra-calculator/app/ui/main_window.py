@@ -1,14 +1,18 @@
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QLineEdit, QListWidget, QMainWindow, QMessageBox, QPushButton, QSpinBox, QVBoxLayout, QWidget
 from app.core.matrix import Matrix
+from app.core.vector import Vector
 from app.ui.matrix_editor import MatrixEditor
 from app.ui.result_view import ResultView
 from app.ui.step_view import StepView
 from app.core.basic_operations import add, subtract, scalar_multiply, multiply, transpose
 from app.algorithms.elimination import gaussian_elimination, rref
+from app.algorithms.determinant import determinant
+from app.algorithms.inverse import inverse
+from app.algorithms.gram_schmidt import gram_schmidt
+from app.algorithms.decompositions import lu_decomposition, qr_decomposition
 from app.utils.cleanup import clean_matrix
 from app.exceptions import LinearAlgebraError
 from app.history.history_manager import HistoryManager
-
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -113,6 +117,11 @@ class MainWindow(QMainWindow):
               "Transpose",
               "Gaussian Elimination",
               "RREF",
+              "Determinant",
+              "Inverse",
+              "Gram-Schmidt",
+              "LU Decomposition",
+              "QR Decomposition",
         ])
         #add operation layout
         operation_layout = QHBoxLayout()
@@ -244,6 +253,8 @@ class MainWindow(QMainWindow):
     def calculate(self):
         operation = self.operation_selector.currentText()
         matrix_a = self.matrix_a_editor.get_matrix()
+        result_is_scalar = False
+        result_displayed = False
         if matrix_a is None:
             return
         try:
@@ -285,13 +296,61 @@ class MainWindow(QMainWindow):
                 result, steps = rref(matrix_a, record_steps=True)
                 inputs = [matrix_a]
                 self.step_view.update_steps(steps)
+            elif operation == "Determinant":
+                result_is_scalar = True
+                result, steps = determinant(matrix_a, record_steps=True)
+                inputs = [matrix_a]
+                self.step_view.update_steps(steps)
+            elif operation == "Inverse":
+                result, steps = inverse(matrix_a, record_steps=True)
+                inputs = [matrix_a]
+                self.step_view.update_steps(steps)
+            elif operation == "Gram-Schmidt":
+                vectors = [
+                    Vector([
+                        matrix_a[row][column]
+                        for row in range(matrix_a.rows)
+                    ])
+                    for column in range(matrix_a.columns)
+                ]
+
+                result_vectors, steps = gram_schmidt(vectors, record_steps=True)
+
+                result = Matrix([
+                    [
+                        result_vectors[column][row]
+                        for column in range(len(result_vectors))
+                    ]
+                    for row in range(matrix_a.rows)
+                ])
+                inputs = [matrix_a]
+                self.step_view.update_steps(steps)
+            elif operation == "LU Decomposition":
+                L, U, steps = lu_decomposition(matrix_a, record_steps=True)
+                inputs = [matrix_a]
+                self.step_view.update_steps(steps)
+                self.result_view.update_matrices([("L", L), ("U", U),])
+                result_displayed = True
+                result = U
+            elif operation == "QR Decomposition":
+                Q, R, steps = qr_decomposition(matrix_a, record_steps=True)
+                inputs = [matrix_a]
+                self.step_view.update_steps(steps)
+                self.result_view.update_matrices([("Q", Q), ("R", R),])
+
+                result_displayed = True
+                result = R
             else:
                 return
 
             self.history_manager.add_entry(operation, inputs, result)
             self.history_list.addItem(f"{len(self.history_manager)}. {operation}")
 
-            self.result_view.update_matrix(result)
+            if not result_displayed:
+                if result_is_scalar:
+                    self.result_view.update_scalar(result)
+                else:
+                    self.result_view.update_matrix(result)
 
         except (ValueError, LinearAlgebraError) as error:
             QMessageBox.warning(self, "Invalid Operation", str(error))

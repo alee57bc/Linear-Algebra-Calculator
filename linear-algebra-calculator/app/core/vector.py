@@ -25,6 +25,9 @@ class Vector:
     def dimension(self):
         return len(self._data)
 
+    def copy(self):
+        return Vector(self._data.copy())
+
     def __getitem__(self, index):
         return self._data[index]
 

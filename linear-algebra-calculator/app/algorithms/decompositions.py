@@ -5,11 +5,19 @@ from app.algorithms.gram_schmidt import gram_schmidt
 from app.core.basic_vector_operations import norm
 from app.utils.numeric import is_zero
 from app.exceptions import LinearDependenceError, NonSquareMatrixError, SingularMatrixError
+from app.results.calculation_step import CalculationStep
+from app.utils.numeric import clean_number
 
-def qr_decomposition(A: Matrix):
+def qr_decomposition(A, record_steps=False):
     columns = [Vector([A[row][col] for row in range(A.rows)])
         for col in range(A.columns)]
-    orthogonal = gram_schmidt(columns)
+
+    if record_steps:
+        orthogonal, steps = gram_schmidt(columns, record_steps=True)
+    else:
+        orthogonal = gram_schmidt(columns)
+        steps = None
+
     orthonormal = []
 
     for vector in orthogonal:
@@ -25,12 +33,22 @@ def qr_decomposition(A: Matrix):
             for col in range(len(orthonormal))]
         for row in range(A.rows)])
 
+    if steps is not None:
+        steps.append(CalculationStep(description="Build Q from the orthonormal vectors.", result=Q.copy()))
+
     R = multiply(transpose(Q), A)
+    if steps is not None:
+        steps.append(CalculationStep(description="Compute R = QᵀA.", result=R.copy()))
+
+    if record_steps:
+        return Q, R, steps
     return Q, R
 
-def lu_decomposition(A: Matrix):
+def lu_decomposition(A, record_steps=False):
     if A.rows != A.columns:
         raise NonSquareMatrixError
+
+    steps = [] if record_steps else None
 
     n = A.rows
     L = Matrix([
@@ -50,5 +68,14 @@ def lu_decomposition(A: Matrix):
             L[row][pivot] = multiplier
             for column in range(pivot, n):
                 U[row][column] -= (multiplier * U[pivot][column])
+
+            if steps is not None:
+                steps.append(
+                    CalculationStep(
+                        description=(f"R{row + 1} ← R{row + 1} - ({multiplier})R{pivot + 1}"),
+                        result=U.copy()))
+
+    if record_steps:
+        return L, U, steps
 
     return L, U

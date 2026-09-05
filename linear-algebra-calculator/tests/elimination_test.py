@@ -197,7 +197,7 @@ def test_gaussian_elimination_records_steps():
 
     assert len(steps) > 0
     assert steps[0].description
-    assert isinstance(steps[0].matrix, Matrix)
+    assert isinstance(steps[0].result, Matrix)
 
 def test_rref_records_steps():
     matrix = Matrix([
@@ -211,7 +211,7 @@ def test_rref_records_steps():
 
     assert len(steps) > 0
     assert steps[0].description
-    assert isinstance(steps[0].matrix, Matrix)
+    assert isinstance(steps[0].result, Matrix)
 
 def test_rref_without_recording_returns_matrix():
     matrix = Matrix([
@@ -242,7 +242,7 @@ def test_recorded_steps_are_independent_snapshots():
     )
 
     assert len(steps) >= 2
-    assert steps[0].matrix is not steps[1].matrix
+    assert steps[0].result is not steps[1].result
 
 def test_recorded_steps_do_not_modify_original():
     matrix = Matrix([
@@ -281,7 +281,7 @@ def test_recorded_snapshot_keeps_original_state():
     )
     first_snapshot = [
         row.copy()
-        for row in steps[0].matrix.data
+        for row in steps[0].result.data
     ]
 
-    assert steps[0].matrix.data == first_snapshot
+    assert steps[0].result.data == first_snapshot

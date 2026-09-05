@@ -4,7 +4,7 @@ from app.utils.numeric import is_close
 from app.exceptions import NonSquareMatrixError, SingularMatrixError
 from app.utils.cleanup import clean_matrix
 
-def inverse(matrix):
+def inverse(matrix, record_steps=False):
     if matrix.rows != matrix.columns:
         raise NonSquareMatrixError
     n = matrix.rows
@@ -23,7 +23,11 @@ def inverse(matrix):
     augmented = Matrix(augmented_data)
 
     # Reduce [A | I] to [I | A^-1]
-    reduced = rref(augmented)
+    if record_steps:
+        reduced, steps = rref(augmented, record_steps=True)
+    else:
+        reduced = rref(augmented)
+        steps = None
 
     # Verify left side is the identity matrix
     for i in range(n):
@@ -38,4 +42,10 @@ def inverse(matrix):
     for i in range(n):
         inverse_data.append(
             reduced[i][n:])
-    return clean_matrix(Matrix(inverse_data))
+
+    result = clean_matrix(Matrix(inverse_data))
+
+    if record_steps:
+        return result, steps
+
+    return result
