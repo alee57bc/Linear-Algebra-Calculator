@@ -1,6 +1,5 @@
-from app.utils.numeric import is_zero, is_close
+from app.utils.numeric import is_zero, is_close, format_number
 from app.results.calculation_step import CalculationStep
-from app.utils.cleanup import clean_matrix
 
 def swap_rows(matrix, row1, row2):
     matrix[row1], matrix[row2] = matrix[row2], matrix[row1]
@@ -56,7 +55,7 @@ def gaussian_elimination(matrix, record_steps=False):
                 scalar = value / pivot_value
                 add_multiple_of_row(result, pivot_row, row, -scalar)
 
-                record_step(steps, (f"R{row + 1} ← R{row + 1} " f"+ ({-scalar})R{pivot_row + 1}"), result)
+                record_step(steps, (f"R{row + 1} ← R{row + 1} " f"+ ({format_number(-scalar)}R{pivot_row + 1}"), result)
         pivot_row += 1
 
     if record_steps:
@@ -82,7 +81,7 @@ def rref(matrix, record_steps=False):
             scalar = 1 / pivot_value
             scale_row(result, pivot_row, scalar)
 
-            record_step(steps, f"R{pivot_row + 1} ← ({scalar})R{pivot_row + 1}", result)
+            record_step(steps, f"R{pivot_row + 1} ← ({format_number(scalar)})R{pivot_row + 1}", result)
 
         for row in range(result.rows):
             if row == pivot_row:
@@ -93,7 +92,7 @@ def rref(matrix, record_steps=False):
             if not is_zero(value):
                 add_multiple_of_row(result, pivot_row, row, -value)
 
-                record_step(steps, (f"R{row + 1} ← R{row + 1} " f"+ ({-value})R{pivot_row + 1}"), result)
+                record_step(steps, (f"R{row + 1} ← R{row + 1} " f"+ ({format_number(-value)})R{pivot_row + 1}"), result)
 
         pivot_row += 1
 

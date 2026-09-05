@@ -1,5 +1,5 @@
 from app.algorithms.elimination import swap_rows, add_multiple_of_row
-from app.utils.numeric import is_zero, clean_number
+from app.utils.numeric import is_zero, clean_number, format_number
 from app.exceptions import NonSquareMatrixError
 from app.results.calculation_step import CalculationStep
 from app.algorithms.elimination import record_step
@@ -38,7 +38,7 @@ def determinant(matrix, record_steps=False):
             if not is_zero(result[row][pivot_column]):
                 scalar = result[row][pivot_column] / pivot_value
                 add_multiple_of_row(result, pivot_column, row, -scalar)
-                record_step(steps, f"R{row + 1} ← R{row + 1} + ({-scalar})R{pivot_column + 1}", result)
+                record_step(steps, f"R{row + 1} ← R{row + 1} + ({format_number(-scalar)})R{pivot_column + 1}", result)
 
     # Product of diagonal
     for i in range(result.rows):

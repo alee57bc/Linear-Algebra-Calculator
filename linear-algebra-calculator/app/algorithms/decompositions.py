@@ -4,10 +4,9 @@ from app.core.basic_operations import transpose, multiply
 from app.algorithms.gram_schmidt import gram_schmidt
 from app.algorithms.elimination import swap_rows
 from app.core.basic_vector_operations import norm
-from app.utils.numeric import is_zero
+from app.utils.numeric import is_zero, clean_number, format_number
 from app.exceptions import LinearDependenceError, NonSquareMatrixError, SingularMatrixError
 from app.results.calculation_step import CalculationStep
-from app.utils.numeric import clean_number
 
 def qr_decomposition(A, record_steps=False):
     columns = [Vector([A[row][col] for row in range(A.rows)])
@@ -94,7 +93,7 @@ def lu_decomposition(A, record_steps=False):
                 U[row][column] -= (multiplier * U[pivot][column])
 
             if steps is not None:
-                steps.append(CalculationStep(description=(f"R{row + 1} ← R{row + 1} " f"- ({multiplier})R{pivot + 1}"), result=U.copy(),))
+                steps.append(CalculationStep(description=(f"R{row + 1} ← R{row + 1} " f"- ({format_number(multiplier)})R{pivot + 1}"), result=U.copy(),))
 
     if record_steps:
         return P, L, U, steps

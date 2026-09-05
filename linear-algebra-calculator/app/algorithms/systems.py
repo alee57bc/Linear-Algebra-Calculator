@@ -7,9 +7,7 @@ from app.utils.cleanup import clean_vector
 
 def solve_system(A: Matrix, b: Vector):
     if A.rows != b.dimension:
-        raise ValueError(
-            "The number of rows in A must match the dimension of b."
-        )
+        raise ValueError("The number of rows in A must match the dimension of b.")
 
     augmented_data = [
             A[i][:] + [b[i]]

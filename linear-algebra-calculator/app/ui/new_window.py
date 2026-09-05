@@ -77,6 +77,15 @@ class MainWindow(QMainWindow):
         self.result_group = QGroupBox("Result")
         self.result_group.setLayout(result_layout)
 
+    #------ Keyboard Shortcut Help ------
+        shortcut_layout = QVBoxLayout()
+        shortcut_layout.addWidget(QLabel("Ctrl+Enter: Calculate"))
+        shortcut_layout.addWidget(QLabel("Ctrl+L: Clear inputs/results. Keeps history and current matrix dimensions."))
+        shortcut_layout.addWidget(QLabel("Ctrl+C: Copy result"))
+        shortcut_layout.addWidget(QLabel("Ctrl+V: Paste Matrix A"))
+        self.shortcut_group = QGroupBox("Keyboard Shortcuts")
+        self.shortcut_group.setLayout(shortcut_layout)
+
     #------ Step View ------
         self.step_view = StepView()
 
@@ -107,15 +116,13 @@ class MainWindow(QMainWindow):
     #------ Main grid ------
         content_layout = QGridLayout()
         content_layout.addWidget(self.matrix_a_panel, 0, 0)
-
         content_layout.addWidget(self.operation_group, 0, 1)
-
         content_layout.addWidget(self.matrix_b_panel, 0, 2)
 
+        content_layout.addWidget(self.shortcut_group, 1, 0)
         content_layout.addWidget(self.result_group, 1, 1)
 
         content_layout.addWidget(self.step_view, 2, 0, 1, 2)
-
         content_layout.addWidget(self.history_group, 2, 2)
 
         content_layout.setColumnStretch(0, 3)
