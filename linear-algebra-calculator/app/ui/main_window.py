@@ -11,7 +11,7 @@ from app.algorithms.inverse import inverse
 from app.algorithms.gram_schmidt import gram_schmidt
 from app.algorithms.decompositions import lu_decomposition, qr_decomposition
 from app.utils.cleanup import clean_matrix
-from app.exceptions import LinearAlgebraError
+from app.exceptions import LinearAlgebraError, DimensionMismatchError, NonSquareMatrixError, SingularMatrixError, LinearDependenceError, ZeroVectorError
 from app.history.history_manager import HistoryManager
 
 class MainWindow(QMainWindow):
@@ -262,49 +262,82 @@ class MainWindow(QMainWindow):
                 matrix_b = self.matrix_b_editor.get_matrix()
                 if matrix_b is None:
                     return
+
+                if (matrix_a.rows != matrix_b.rows or matrix_a.columns != matrix_b.columns):
+                    QMessageBox.warning(self, "Cannot Add Matrices",
+                        ("Addition requires matrices with identical dimensions.\n\n"
+                            f"Matrix A: {matrix_a.rows} × {matrix_a.columns}\n"
+                            f"Matrix B: {matrix_b.rows} × {matrix_b.columns}"))
+                    return
+
                 result = add(matrix_a, matrix_b)
                 inputs = [matrix_a, matrix_b]
                 self.step_view.clear_steps()
+
             elif operation == "Subtraction":
                 matrix_b = self.matrix_b_editor.get_matrix()
                 if matrix_b is None:
                     return
+                if (matrix_a.rows != matrix_b.rows or matrix_a.columns != matrix_b.columns):
+                    QMessageBox.warning(self, "Cannot Subtract Matrices",
+                        ("Subtraction requires matrices with identical dimensions.\n\n"
+                            f"Matrix A: {matrix_a.rows} × {matrix_a.columns}\n"
+                            f"Matrix B: {matrix_b.rows} × {matrix_b.columns}"))
+                    return
+
                 result = subtract(matrix_a, matrix_b)
                 inputs = [matrix_a, matrix_b]
                 self.step_view.clear_steps()
+
             elif operation == "Scalar Multiplication":
                 scalar = float(self.scalar_input.text())
                 result = scalar_multiply(matrix_a, scalar)
                 inputs = [matrix_a, scalar]
                 self.step_view.clear_steps()
+
             elif operation == "Matrix Multiplication":
                 matrix_b = self.matrix_b_editor.get_matrix()
                 if matrix_b is None:
                     return
+                if matrix_a.columns != matrix_b.rows:
+                    QMessageBox.warning(self, "Cannot Multiply Matrices",
+                        ("Matrix multiplication requires the number of columns "
+                            "in Matrix A to equal the number of rows in Matrix B.\n\n"
+                            f"Matrix A: {matrix_a.rows} × {matrix_a.columns}\n"
+                            f"Matrix B: {matrix_b.rows} × {matrix_b.columns}\n\n"
+                            f"{matrix_a.columns} ≠ {matrix_b.rows}"))
+                    return
+
                 result = multiply(matrix_a, matrix_b)
                 inputs = [matrix_a, matrix_b]
                 self.step_view.clear_steps()
+
             elif operation == "Transpose":
                 result = transpose(matrix_a)
                 inputs = [matrix_a]
                 self.step_view.clear_steps()
+
             elif operation == "Gaussian Elimination":
                 result, steps = gaussian_elimination(matrix_a, record_steps=True)
                 inputs = [matrix_a]
                 self.step_view.update_steps(steps)
+
             elif operation == "RREF":
                 result, steps = rref(matrix_a, record_steps=True)
                 inputs = [matrix_a]
                 self.step_view.update_steps(steps)
+
             elif operation == "Determinant":
                 result_is_scalar = True
                 result, steps = determinant(matrix_a, record_steps=True)
                 inputs = [matrix_a]
                 self.step_view.update_steps(steps)
+
             elif operation == "Inverse":
                 result, steps = inverse(matrix_a, record_steps=True)
                 inputs = [matrix_a]
                 self.step_view.update_steps(steps)
+
             elif operation == "Gram-Schmidt":
                 vectors = [
                     Vector([
@@ -325,6 +358,7 @@ class MainWindow(QMainWindow):
                 ])
                 inputs = [matrix_a]
                 self.step_view.update_steps(steps)
+
             elif operation == "LU Decomposition":
                 L, U, steps = lu_decomposition(matrix_a, record_steps=True)
                 inputs = [matrix_a]
@@ -332,6 +366,7 @@ class MainWindow(QMainWindow):
                 self.result_view.update_matrices([("L", L), ("U", U),])
                 result_displayed = True
                 result = U
+
             elif operation == "QR Decomposition":
                 Q, R, steps = qr_decomposition(matrix_a, record_steps=True)
                 inputs = [matrix_a]
@@ -340,6 +375,7 @@ class MainWindow(QMainWindow):
 
                 result_displayed = True
                 result = R
+
             else:
                 return
 
@@ -352,8 +388,26 @@ class MainWindow(QMainWindow):
                 else:
                     self.result_view.update_matrix(result)
 
-        except (ValueError, LinearAlgebraError) as error:
-            QMessageBox.warning(self, "Invalid Operation", str(error))
+        except DimensionMismatchError:
+            QMessageBox.warning(self, "Dimension Mismatch", "The matrix or vector dimensions are incompatible " "for this operation.")
+
+        except NonSquareMatrixError:
+            QMessageBox.warning(self, "Square Matrix Required", ("This operation requires a square matrix.\n\n" f"You entered a " f"{matrix_a.rows} × {matrix_a.columns} matrix."))
+
+        except SingularMatrixError:
+            QMessageBox.warning(self, "Singular Matrix", ("This matrix is singular, so this operation " "cannot be completed."))
+
+        except LinearDependenceError:
+            QMessageBox.warning(self, "Linearly Dependent Input", ("This operation requires linearly independent " "vectors or matrix columns."))
+
+        except ZeroVectorError:
+                QMessageBox.warning(self, "Zero Vector", "This operation cannot be performed using the zero vector.")
+
+        except ValueError as error:
+            QMessageBox.warning(self, "Invalid Input", str(error))
+
+        except LinearAlgebraError as error:
+            QMessageBox.warning(self, "Calculation Error", str(error))
 
     def show_history_entry(self, item):
         index = self.history_list.row(item)
