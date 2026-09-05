@@ -8,8 +8,6 @@ class ResultView(QWidget):
         self.matrix = matrix
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
-        self.title = QLabel("Result")
-        self.layout.addWidget(self.title)
         self.matrix_layout = QGridLayout()
         self.layout.addLayout(self.matrix_layout)
 

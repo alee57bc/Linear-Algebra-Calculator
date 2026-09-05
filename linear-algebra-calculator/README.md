@@ -3,8 +3,6 @@ Linear Algebra Calculator
 TODO:
 - Improve Matrix API
 - Add mathematical property tests
-- Test Copy and paste function
-- test Import and export
 
 Limitations:
 - Eigenvalues/eigenvectors only support 2×2 
@@ -30,3 +28,10 @@ Ctrl+L
 - clear result
 - clear steps
 - keep history and current matrix dimensions
+
+Left:
+- make UI look good
+- fix all above
+- test all functions
+- update documentation
+- release

@@ -1,11 +1,10 @@
 import sys
 from PySide6.QtWidgets import QApplication
-from app.ui.main_window import MainWindow
+from app.ui.new_window import MainWindow
 
 def main():
     app = QApplication(sys.argv)
     window = MainWindow()
-    window.resize(500, 500)
     window.show()
     sys.exit(app.exec())
 
