@@ -1,4 +1,6 @@
-from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QLineEdit, QListWidget, QMainWindow, QMessageBox, QPushButton, QSpinBox, QVBoxLayout, QWidget
+import os
+from PySide6.QtWidgets import QApplication, QComboBox, QFileDialog, QHBoxLayout, QLabel, QLineEdit, QListWidget, QMainWindow, QMessageBox, QPushButton, QSpinBox, QVBoxLayout, QWidget
+from PySide6.QtGui import  QKeySequence, QShortcut
 from app.core.matrix import Matrix
 from app.core.vector import Vector
 from app.ui.matrix_editor import MatrixEditor
@@ -13,12 +15,26 @@ from app.algorithms.decompositions import lu_decomposition, qr_decomposition
 from app.utils.cleanup import clean_matrix
 from app.exceptions import LinearAlgebraError, DimensionMismatchError, NonSquareMatrixError, SingularMatrixError, LinearDependenceError, ZeroVectorError
 from app.history.history_manager import HistoryManager
+from app.utils.matrix_text import parse_matrix_text, matrix_to_text
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Linear Algebra Calculator")
         self.result_view = ResultView()
+        self.current_result = None
+
+    #------ Keyboard Shortcuts ------
+        self.calculate_shortcut = QShortcut(QKeySequence("Ctrl+Return"), self)
+        self.calculate_shortcut.activated.connect(self.calculate)
+        self.clear_shortcut = QShortcut(QKeySequence("Ctrl+L"), self)
+        self.clear_shortcut.activated.connect(self.clear_inputs)
+        self.calculate_enter_shortcut = QShortcut(QKeySequence("Ctrl+Enter"),self)
+        self.calculate_enter_shortcut.activated.connect(self.calculate)
+        self.copy_shortcut = QShortcut(QKeySequence("Ctrl+C"), self)
+        self.copy_shortcut.activated.connect(self.copy_result)
+        self.paste_shortcut = QShortcut(QKeySequence("Ctrl+V"), self)
+        self.paste_shortcut.activated.connect(self.paste_matrix_a)
 
     #------ History ------
         self.history_manager = HistoryManager()
@@ -150,8 +166,18 @@ class MainWindow(QMainWindow):
         self.calculate_button = QPushButton("Calculate")
         self.calculate_button.clicked.connect(self.calculate)
 
+    #------ Import / Export ------
+        self.import_button = QPushButton("Import Matrix")
+        self.import_button.clicked.connect(self.import_matrix)
+
+        self.export_button = QPushButton("Export Result")
+        self.export_button.clicked.connect(self.export_result)
+
+
     #------ Main layout ------
         layout = QVBoxLayout()
+        layout.addWidget(self.import_button)
+        layout.addWidget(self.export_button)
 
         layout.addWidget(QLabel("Matrix A"))
         layout.addLayout(matrix_a_layout)
@@ -366,6 +392,7 @@ class MainWindow(QMainWindow):
                 self.result_view.update_matrices([("L", L), ("U", U),])
                 result_displayed = True
                 result = U
+                self.current_result = U
 
             elif operation == "QR Decomposition":
                 Q, R, steps = qr_decomposition(matrix_a, record_steps=True)
@@ -375,6 +402,7 @@ class MainWindow(QMainWindow):
 
                 result_displayed = True
                 result = R
+                self.current_result = R
 
             else:
                 return
@@ -385,8 +413,10 @@ class MainWindow(QMainWindow):
             if not result_displayed:
                 if result_is_scalar:
                     self.result_view.update_scalar(result)
+                    self.current_result = result
                 else:
                     self.result_view.update_matrix(result)
+                    self.current_result = result
 
         except DimensionMismatchError:
             QMessageBox.warning(self, "Dimension Mismatch", "The matrix or vector dimensions are incompatible " "for this operation.")
@@ -417,3 +447,129 @@ class MainWindow(QMainWindow):
     def clear_history(self):
         self.history_manager.clear()
         self.history_list.clear()
+
+    def clear_inputs(self):
+        matrix_a = Matrix([
+            [0.0 for _ in range(self.columns_a_spinbox.value())]
+            for _ in range(self.rows_a_spinbox.value())])
+
+        matrix_b = Matrix([
+            [0.0 for _ in range(self.columns_b_spinbox.value())]
+            for _ in range(self.rows_b_spinbox.value())])
+
+        self.matrix_a = matrix_a
+        self.matrix_b = matrix_b
+
+        self.matrix_a_editor.update_matrix(matrix_a)
+        self.matrix_b_editor.update_matrix(matrix_b)
+
+        self.scalar_input.setText("1.0")
+
+        self.step_view.clear_steps()
+        self.result_view.clear_result()
+        self.current_result = None
+
+    def copy_result(self):
+        if self.current_result is None:
+            return
+
+        clipboard = QApplication.clipboard()
+
+        if isinstance(self.current_result, Matrix):
+            text = matrix_to_text(self.current_result)
+        else:
+            text = str(self.current_result)
+
+        clipboard.setText(text)
+
+    def paste_matrix_a(self):
+        clipboard = QApplication.clipboard()
+        text = clipboard.text()
+
+        try:
+            matrix = parse_matrix_text(text)
+        except ValueError as error:
+            QMessageBox.warning(self, "Cannot Paste Matrix", str(error))
+            return
+
+        if matrix.rows > 10 or matrix.columns > 10:
+            QMessageBox.warning(self, "Matrix Too Large", "Pasted matrices cannot exceed 10 × 10.")
+            return
+
+        self.matrix_a = matrix
+
+        # Update dimension controls
+        self.rows_a_spinbox.blockSignals(True)
+        self.columns_a_spinbox.blockSignals(True)
+
+        self.rows_a_spinbox.setValue(matrix.rows)
+        self.columns_a_spinbox.setValue(matrix.columns)
+
+        self.rows_a_spinbox.blockSignals(False)
+        self.columns_a_spinbox.blockSignals(False)
+
+        # Update table
+        self.matrix_a_editor.update_matrix(matrix)
+
+    def import_matrix(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Import Matrix", "", "Matrix Files (*.txt *.csv);;Text Files (*.txt);;CSV Files (*.csv)")
+
+        if not file_path:
+            return
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as file:
+                text = file.read()
+            matrix = parse_matrix_text(text)
+        except (OSError, ValueError) as error:
+            QMessageBox.warning(self, "Cannot Import Matrix", str(error))
+            return
+
+        if matrix.rows > 10 or matrix.columns > 10:
+            QMessageBox.warning(self, "Matrix Too Large", "Imported matrices cannot exceed 10 × 10.")
+            return
+
+        self.matrix_a = matrix
+
+        self.rows_a_spinbox.blockSignals(True)
+        self.columns_a_spinbox.blockSignals(True)
+
+        self.rows_a_spinbox.setValue(matrix.rows)
+        self.columns_a_spinbox.setValue(matrix.columns)
+
+        self.rows_a_spinbox.blockSignals(False)
+        self.columns_a_spinbox.blockSignals(False)
+
+        self.matrix_a_editor.update_matrix(matrix)
+
+    def export_result(self):
+        if self.current_result is None:
+            QMessageBox.warning(self, "No Result", "There is no result to export.")
+            return
+
+        file_path, selected_filter = QFileDialog.getSaveFileName(self, "Export Result", "", "Text Files (*.txt);;CSV Files (*.csv)")
+
+        if not file_path:
+            return
+
+        root, extension = os.path.splitext(file_path)
+
+        if not extension:
+            if selected_filter.startswith("CSV"):
+                file_path += ".csv"
+            else:
+                file_path += ".txt"
+        try:
+            if isinstance(self.current_result, Matrix):
+                if selected_filter.startswith("CSV"):
+                    text = "\n".join(",".join(str(value) for value in row)
+                        for row in self.current_result.data)
+                else:
+                    text = matrix_to_text(self.current_result)
+            else:
+                text = str(self.current_result)
+            with open(file_path, "w", encoding="utf-8") as file:
+                file.write(text)
+        except OSError as error:
+            QMessageBox.warning(
+                self, "Cannot Export Result", str(error))
