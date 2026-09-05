@@ -10,7 +10,7 @@ class HistoryManager:
     def entries(self):
         return self._entries.copy()
 
-    def add_entry(self, operation, inputs, result):
+    def add_entry(self, operation, inputs, result, steps=None, extra_results=None):
         stored_inputs = []
 
         for value in inputs:
@@ -24,7 +24,14 @@ class HistoryManager:
         else:
             stored_result = result
 
-        entry = HistoryEntry(operation=operation, inputs=stored_inputs, result=stored_result)
+        stored_steps = (steps.copy() if steps is not None else [])
+        stored_extra_results = []
+
+        if extra_results:
+            for label, matrix in extra_results:
+                stored_extra_results.append((label, matrix.copy()))
+
+        entry = HistoryEntry(operation=operation, inputs=stored_inputs, result=stored_result, steps=stored_steps, extra_results=stored_extra_results)
         self._entries.append(entry)
 
     def clear(self):

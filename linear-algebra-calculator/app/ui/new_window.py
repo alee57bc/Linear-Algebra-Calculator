@@ -177,7 +177,51 @@ class MainWindow(QMainWindow):
         index = self.history_list.row(item)
         entry = self.history_manager.get_entry(index)
 
-        if isinstance(entry.result, Matrix):
+        #restore inputs
+        if len(entry.inputs) >= 1:
+            first_input = entry.inputs[0]
+
+            if isinstance(first_input, Matrix):
+                self.matrix_a_panel.set_matrix(first_input)
+
+        if len(entry.inputs) >= 2:
+            second_input = entry.inputs[1]
+
+            if isinstance(second_input, Matrix):
+                self.matrix_b_panel.set_matrix(second_input)
+
+            elif isinstance(second_input, (int, float)):
+                self.scalar_input.setText(str(second_input))
+
+        #restore operation
+        basic_operations = [
+            "Addition",
+            "Subtraction",
+            "Scalar Multiplication",
+            "Matrix Multiplication",
+            "Transpose",
+        ]
+
+        if entry.operation in basic_operations:
+            self.tabs.setCurrentIndex(0)
+        else:
+            self.tabs.setCurrentIndex(1)
+
+        operation_index = (self.operation_selector.findText(entry.operation))
+
+        if operation_index >= 0:
+            self.operation_selector.setCurrentIndex(operation_index)
+
+        #restore steps
+        if entry.steps:
+            self.step_view.update_steps(entry.steps)
+        else:
+            self.step_view.clear_steps()
+
+        #restore result
+        if entry.extra_results:
+            self.result_view.update_matrices(entry.extra_results)
+        elif isinstance(entry.result, Matrix):
             self.result_view.update_matrix(entry.result)
         else:
             self.result_view.update_scalar(entry.result)
@@ -349,7 +393,7 @@ class MainWindow(QMainWindow):
             if scalar is not None:
                 inputs.append(scalar)
 
-            self.history_manager.add_entry(operation, inputs, calculation.result)
+            self.history_manager.add_entry(operation, inputs, calculation.result, steps=calculation.steps, extra_results=calculation.extra_results)
 
             self.history_list.addItem(f"{len(self.history_manager)}. " f"{operation}")
 
