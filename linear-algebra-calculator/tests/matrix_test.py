@@ -59,3 +59,21 @@ def test_matrix_rejects_non_numeric_values():
             [1, 2],
             [3, "hello"]
         ])
+
+
+def test_matrix_copy_and_construction_do_not_alias_input():
+    data = [[1, 2], [3, 4]]
+    matrix = Matrix(data)
+    copied = matrix.copy()
+    data[0][0] = 99
+    copied[1][1] = 99
+    assert matrix == Matrix([[1, 2], [3, 4]])
+    assert matrix != copied
+    assert matrix != data
+
+
+def test_matrix_row_assignment_converts_numeric_values():
+    matrix = Matrix([[0, 0]])
+    matrix[0] = ["2.5", 1j]
+    assert matrix.data == [[2.5, 1j]]
+    assert str(Matrix([[1, 2], [3, 4]])) == "[1.0 2.0]\n[3.0 4.0]"

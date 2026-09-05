@@ -20,21 +20,6 @@ def test_inverse_3x3():
     for actual_row, expected_row in zip(result.data, expected):
         assert actual_row == pytest.approx(expected_row)
 
-def test_inverse_3x3():
-    matrix = Matrix([
-        [1, 0, 0],
-        [0, 2, 0],
-        [0, 0, 4]
-    ])
-    result = inverse(matrix)
-    expected = [
-        [1.0, 0.0, 0.0],
-        [0.0, 0.5, 0.0],
-        [0.0, 0.0, 0.25]
-    ]
-
-    for actual_row, expected_row in zip(result.data, expected):
-        assert actual_row == pytest.approx(expected_row)
 
 def test_inverse_singular():
     matrix = Matrix([

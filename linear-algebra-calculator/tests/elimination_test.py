@@ -284,4 +284,11 @@ def test_recorded_snapshot_keeps_original_state():
         for row in steps[0].result.data
     ]
 
+    result[0][0] = 999
+    steps[-1].result[0][0] = -999
     assert steps[0].result.data == first_snapshot
+
+
+def test_gaussian_elimination_single_row_with_extra_columns():
+    matrix = Matrix([[2, 4, 6]])
+    assert gaussian_elimination(matrix) == matrix

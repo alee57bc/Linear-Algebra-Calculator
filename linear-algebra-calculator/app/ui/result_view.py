@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
 from app.core.matrix import Matrix
-from app.utils.numeric import clean_number, format_number
+from app.utils.numeric import format_number
 
 class ResultView(QWidget):
     def __init__(self, matrix=None):
@@ -35,17 +35,20 @@ class ResultView(QWidget):
 
     def update_matrices(self, matrices):
         self.clear_result()
-        current_row = 0
+        row_offset = 0
 
-        for label, matrix in matrices:
-            title = QLabel(label)
-            self.matrix_layout.addWidget(title, current_row, 0, 1, matrix.columns)
-            current_row += 1
+        for name, matrix in matrices:
+            title = QLabel(f"{name} =")
+            self.matrix_layout.addWidget(title, row_offset, 0, 1, matrix.columns)
+
+            row_offset += 1
+
             for row in range(matrix.rows):
                 for column in range(matrix.columns):
                     value = QLabel(format_number(matrix[row][column]))
-                    self.matrix_layout.addWidget(value, current_row + row, column)
-            current_row += matrix.rows + 1
+                    self.matrix_layout.addWidget(value, row_offset + row, column)
+
+            row_offset += matrix.rows + 1
 
     def update_values(self, values):
         self.clear_result()

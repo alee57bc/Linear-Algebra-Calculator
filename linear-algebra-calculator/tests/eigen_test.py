@@ -46,14 +46,6 @@ def test_eigenvalues_requires_square_matrix():
     with pytest.raises(NonSquareMatrixError):
         eigenvalues(A)
 
-def test_eigenvalues_requires_square_matrix():
-    A = Matrix([
-        [1, 2, 3],
-        [4, 5, 6]
-    ])
-
-    with pytest.raises(NonSquareMatrixError):
-        eigenvalues(A)
 
 def test_eigenvectors_diagonal_matrix():
     A = Matrix([

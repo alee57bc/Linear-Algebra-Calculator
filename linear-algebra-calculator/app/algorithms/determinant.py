@@ -22,6 +22,8 @@ def determinant(matrix, record_steps=False):
 
         # No pivot means determinant is zero
         if pivot is None:
+            if record_steps:
+                return 0.0, steps
             return 0.0
 
         # Swap rows if necessary

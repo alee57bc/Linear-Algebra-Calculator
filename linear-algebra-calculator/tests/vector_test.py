@@ -36,3 +36,13 @@ def test_vector_accepts_complex_values():
 
     assert v[0] == 1 + 2j
     assert v[1] == 3 - 4j
+
+
+def test_vector_copy_and_construction_do_not_alias_input():
+    data = [1, 2]
+    vector = Vector(data)
+    copied = vector.copy()
+    data[0] = 99
+    copied[1] = 99
+    assert vector.data == [1, 2]
+    assert str(vector) == "[1.0 2.0]"

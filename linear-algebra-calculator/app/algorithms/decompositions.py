@@ -55,11 +55,13 @@ def lu_decomposition(A, record_steps=False):
         for _ in range(n)])
     U = A.copy()
 
-    P = Matrix([[1.0 if i == j else 0.0 for j in range(n)]
-        for i in range(n)])
+    P = Matrix([[1.0 if i == j else 0.0 for j in range(n)] for i in range(n)])
 
     for i in range(n):
         L[i][i] = 1.0
+
+    if steps is not None:
+        steps.append(CalculationStep(description="Start with U = A.", result=U.copy()))
 
     for pivot in range(n):
         pivot_row = None
@@ -71,6 +73,9 @@ def lu_decomposition(A, record_steps=False):
 
         if pivot_row is None:
             raise SingularMatrixError
+
+        if steps is not None:
+            steps.append(CalculationStep(description=(f"Use {format_number(U[pivot_row][pivot])} " f"as the pivot in column {pivot + 1}."), result=U.copy()))
 
         if pivot_row != pivot:
             swap_rows(U, pivot, pivot_row)
@@ -89,11 +94,25 @@ def lu_decomposition(A, record_steps=False):
             multiplier = U[row][pivot] / pivot_value
             L[row][pivot] = multiplier
 
+            if steps is not None:
+                steps.append(CalculationStep(description=(
+                            f"Compute multiplier "
+                            f"m{row + 1}{pivot + 1} = "
+                            f"{format_number(U[row][pivot])} / "
+                            f"{format_number(pivot_value)} = "
+                            f"{format_number(multiplier)}."),
+                        result=L.copy()))
+
             for column in range(pivot, n):
                 U[row][column] -= (multiplier * U[pivot][column])
 
             if steps is not None:
                 steps.append(CalculationStep(description=(f"R{row + 1} ← R{row + 1} " f"- ({format_number(multiplier)})R{pivot + 1}"), result=U.copy(),))
+
+    if steps is not None:
+        steps.append(CalculationStep(description="Final permutation matrix P.", result=P.copy()))
+        steps.append(CalculationStep(description="Final lower triangular matrix L.", result=L.copy()))
+        steps.append(CalculationStep(description="Final upper triangular matrix U.", result=U.copy()))
 
     if record_steps:
         return P, L, U, steps

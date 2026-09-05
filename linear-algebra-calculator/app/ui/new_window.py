@@ -354,7 +354,6 @@ class MainWindow(QMainWindow):
 #------ Calculate ------
     def calculate(self):
         operation = self.operation_selector.currentText()
-
         matrix_a = self.matrix_a_panel.get_matrix()
 
         if matrix_a is None:
