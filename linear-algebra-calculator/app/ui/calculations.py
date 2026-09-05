@@ -76,16 +76,15 @@ class CalculationController:
             return CalculationResult(result=R, steps=steps, extra_results=[("Q", Q), ("R", R),])
 
         if operation == "Eigenvalues":
-            values = eigenvalues(matrix_a)
-
-            return CalculationResult(result=values)
+            values, steps = eigenvalues(matrix_a, record_steps=True)
+            return CalculationResult(result=values, steps=steps)
 
         if operation == "Eigenvectors":
-            vectors = eigenvectors(matrix_a)
-            return CalculationResult(result=vectors)
+            vectors, steps = eigenvectors(matrix_a, record_steps=True)
+            return CalculationResult(result=vectors, steps=steps)
 
         if operation == "Diagonalization":
-            P, D, P_inverse = diagonalize(matrix_a)
-            return CalculationResult(result=D, extra_results=[("P", P), ("D", D), ("P⁻¹", P_inverse),])
+            P, D, P_inverse, steps = diagonalize(matrix_a, record_steps=True)
+            return CalculationResult(result=D, steps=steps, extra_results=[("P", P), ("D", D), ("P⁻¹", P_inverse),])
 
         raise ValueError(f"Unknown operation: {operation}")

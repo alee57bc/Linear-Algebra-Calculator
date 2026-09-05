@@ -38,6 +38,7 @@ class StepView(QGroupBox):
 
         for index, step in enumerate(steps, start=1):
             description = QLabel(f"Step {index}: {step.description}")
+            description.setWordWrap(True)
             self.content_layout.addWidget(description)
             result = step.result
 
