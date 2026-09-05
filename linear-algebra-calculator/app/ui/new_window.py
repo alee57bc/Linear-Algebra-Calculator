@@ -2,6 +2,7 @@ import os
 from PySide6.QtWidgets import QApplication, QComboBox, QFileDialog, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QListWidget, QMainWindow, QMessageBox, QPushButton, QTabBar, QVBoxLayout, QWidget
 from PySide6.QtGui import  QKeySequence, QShortcut
 from app.core.matrix import Matrix
+from app.core.vector import Vector
 from app.ui.result_view import ResultView
 from app.ui.step_view import StepView
 from app.history.history_manager import HistoryManager
@@ -9,6 +10,7 @@ from app.utils.matrix_text import parse_matrix_text, matrix_to_text
 from app.ui.matrix_panel import MatrixPanel
 from app.ui.calculations import CalculationController
 from app.exceptions import LinearAlgebraError, DimensionMismatchError, NonSquareMatrixError, SingularMatrixError, LinearDependenceError, ZeroVectorError
+from app.utils.numeric import format_number
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -156,7 +158,10 @@ class MainWindow(QMainWindow):
                 "Inverse",
                 "Gram-Schmidt",
                 "LU Decomposition",
-                "QR Decomposition",])
+                "QR Decomposition",
+                "Eigenvalues",
+                "Eigenvectors",
+                "Diagonalization",])
         self.update_operation_ui()
 
 #------ Dynamic operation UI ------
@@ -223,6 +228,10 @@ class MainWindow(QMainWindow):
             self.result_view.update_matrices(entry.extra_results)
         elif isinstance(entry.result, Matrix):
             self.result_view.update_matrix(entry.result)
+        elif (isinstance(entry.result, list) and entry.result and isinstance(entry.result[0], Vector)):
+            self.result_view.update_vectors(entry.result)
+        elif isinstance(entry.result, list):
+            self.result_view.update_values(entry.result)
         else:
             self.result_view.update_scalar(entry.result)
 
@@ -323,7 +332,7 @@ class MainWindow(QMainWindow):
         try:
             if isinstance(self.current_result, Matrix):
                 if selected_filter.startswith("CSV"):
-                    text = "\n".join(",".join(str(value) for value in row)
+                    text = "\n".join(",".join(format_number(value) for value in row)
                         for row in self.current_result.data)
                 else:
                     text = matrix_to_text(self.current_result)
@@ -379,6 +388,10 @@ class MainWindow(QMainWindow):
                 self.result_view.update_matrices(calculation.extra_results)
             elif isinstance(calculation.result, Matrix):
                 self.result_view.update_matrix(calculation.result)
+            elif (isinstance(calculation.result, list) and calculation.result and isinstance(calculation.result[0], Vector)):
+                self.result_view.update_vectors(calculation.result)
+            elif isinstance(calculation.result, list):
+                self.result_view.update_values(calculation.result)
             else:
                 self.result_view.update_scalar(calculation.result)
 

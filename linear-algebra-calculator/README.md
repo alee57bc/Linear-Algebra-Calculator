@@ -1,15 +1,10 @@
 Linear Algebra Calculator
 
 TODO:
-- Improve Matrix API
-- Add mathematical property tests
-
-Limitations:
-- UI support for complex result
-- 
-Step View:
 - Values have more than 2 decimal places at times
-- LU needs updating
+- LU, QR, Diagonalization result view needs updating
+- Eigenvector/value, Diagonalization has no step view
+- add keyboard shortcuts to UI
 
 Keyboard Shortcuts:
 

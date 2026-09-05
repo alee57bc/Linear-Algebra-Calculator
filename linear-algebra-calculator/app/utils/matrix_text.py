@@ -1,4 +1,5 @@
 from app.core.matrix import Matrix
+from app.utils.numeric import format_number
 
 def parse_matrix_text(text):
     lines = [line.strip()
@@ -32,5 +33,5 @@ def parse_matrix_text(text):
 
 def matrix_to_text(matrix: Matrix) -> str:
     return "\n".join(
-        " ".join(str(value) for value in row)
+        " ".join(format_number(value) for value in row)
         for row in matrix.data)

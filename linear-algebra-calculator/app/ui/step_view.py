@@ -1,10 +1,11 @@
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QGroupBox, QScrollArea, QWidget
 from app.core.matrix import Matrix
 from app.core.vector import Vector
+from app.utils.numeric import format_number
 
 class StepView(QGroupBox):
     def __init__(self):
-        super().__init__()
+        super().__init__("Steps")
 
         # Outer layout for the group box
         outer_layout = QVBoxLayout()
@@ -42,11 +43,11 @@ class StepView(QGroupBox):
 
             if isinstance(result, Matrix):
                 for row in result.data:
-                    row_label = QLabel("  ".join(str(value) for value in row))
+                    row_label = QLabel("  ".join(format_number(value) for value in row))
                     self.content_layout.addWidget(row_label)
 
             elif isinstance(result, Vector):
-                vector_label = QLabel("[" + "  ".join(str(value) for value in result.data) + "]")
+                vector_label = QLabel("[" + "  ".join(format_number(value) for value in result.data) + "]")
                 self.content_layout.addWidget(vector_label)
 
         self.content_layout.addStretch()

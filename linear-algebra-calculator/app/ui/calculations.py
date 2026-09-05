@@ -7,6 +7,7 @@ from app.algorithms.determinant import determinant
 from app.algorithms.inverse import inverse
 from app.algorithms.gram_schmidt import gram_schmidt
 from app.algorithms.decompositions import lu_decomposition, qr_decomposition
+from app.algorithms.eigen import eigenvalues, eigenvectors, diagonalize
 
 @dataclass
 class CalculationResult:
@@ -73,5 +74,18 @@ class CalculationController:
         if operation == "QR Decomposition":
             Q, R, steps = qr_decomposition(matrix_a, record_steps=True)
             return CalculationResult(result=R, steps=steps, extra_results=[("Q", Q), ("R", R),])
+
+        if operation == "Eigenvalues":
+            values = eigenvalues(matrix_a)
+
+            return CalculationResult(result=values)
+
+        if operation == "Eigenvectors":
+            vectors = eigenvectors(matrix_a)
+            return CalculationResult(result=vectors)
+
+        if operation == "Diagonalization":
+            P, D, P_inverse = diagonalize(matrix_a)
+            return CalculationResult(result=D, extra_results=[("P", P), ("D", D), ("P⁻¹", P_inverse),])
 
         raise ValueError(f"Unknown operation: {operation}")

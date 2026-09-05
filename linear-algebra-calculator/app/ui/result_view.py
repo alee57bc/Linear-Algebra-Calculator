@@ -46,3 +46,18 @@ class ResultView(QWidget):
                     value = QLabel(format_number(matrix[row][column]))
                     self.matrix_layout.addWidget(value, current_row + row, column)
             current_row += matrix.rows + 1
+
+    def update_values(self, values):
+        self.clear_result()
+
+        for index, value in enumerate(values):
+            label = QLabel(f"λ{index + 1} = {format_number(value)}")
+            self.matrix_layout.addWidget(label, index, 0)
+
+    def update_vectors(self, vectors):
+        self.clear_result()
+
+        for index, vector in enumerate(vectors):
+            text = "[" + "  ".join(format_number(value) for value in vector.data) + "]"
+            label = QLabel(f"v{index + 1} = {text}")
+            self.matrix_layout.addWidget(label, index, 0)

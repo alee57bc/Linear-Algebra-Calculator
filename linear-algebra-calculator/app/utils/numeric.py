@@ -35,9 +35,6 @@ def clean_complex(value: complex):
     if is_zero(imag):
         return real
 
-    if is_zero(real):
-        return complex(0.0, imag)
-
     return complex(real, imag)
 
 def format_number(value, decimals: int = 2) -> str:
@@ -51,9 +48,9 @@ def format_number(value, decimals: int = 2) -> str:
         imag = round(value.imag, decimals)
 
         if is_zero(real):
-            if imag == 1:
+            if is_close(imag, 1.0):
                 return "i"
-            if imag == -1:
+            if is_close(imag, -1.0):
                 return "-i"
             return f"{imag:g}i"
 
@@ -61,7 +58,7 @@ def format_number(value, decimals: int = 2) -> str:
 
         imag_abs = abs(imag)
 
-        if imag_abs == 1:
+        if is_close(imag_abs, 1.0):
             imag_text = "i"
         else:
             imag_text = f"{imag_abs:g}i"
