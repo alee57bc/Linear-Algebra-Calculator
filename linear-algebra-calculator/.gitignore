@@ -2,3 +2,5 @@
 .coverage.*
 htmlcov/
 tests/.pytest_tmp/
+build/
+dist/

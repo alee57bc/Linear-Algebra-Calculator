@@ -17,6 +17,19 @@ Already have `.venv`? Skip the first command. If it's activated, you can launch 
 
 Getting `No module named 'app'`? Make sure you're in the folder that contains `app`.
 
+## Build a Windows app
+
+From the inner `linear-algebra-calculator` folder:
+
+```powershell
+..\.venv\Scripts\python.exe -m pip install -r build-requirements.txt
+powershell -ExecutionPolicy Bypass -File .\build.ps1
+```
+
+Double-click `dist\Linear Algebra Calculator.exe` to open the app without a terminal. You can copy that file to another Windows computer without installing Python. To put it on your desktop, right-click the executable and choose **Show more options → Send to → Desktop (create shortcut)**.
+
+Run the build again after changing the code, with the existing executable closed. This creates a portable app, not an installer. The single-file app may take a moment to open while it unpacks its bundled files. Packaging uses [PyInstaller](https://pyinstaller.org/en/stable/operating-mode.html).
+
 ## What it can do
 
 - Addition, subtraction, scalar and matrix multiplication, transpose
